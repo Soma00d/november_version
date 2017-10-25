@@ -112,6 +112,21 @@ $saveLogFinal = function ($connexion){
     
     
 };
+
+//retourne les elements du test final en fonction d'une family id
+$getGlobalLog = function ($param1, $param2, $param3, $param4, $connexion){
+    $queryLog = "SELECT * FROM global_log WHERE json_log != '' ";
+    if($param1 != ""){$queryLog.= "AND part_number='$param1' ";}
+    if($param2 != ""){$queryLog.= "AND serial_number='$param2' ";}
+    if($param3 != ""){$queryLog.= "AND user_sso='$param3' ";}
+    if($param4 != ""){$queryLog.= "AND date >='$param4' ";}
+    $resultats = $connexion->query($queryLog); 
+    
+    $resultats->execute();
+    $result = $resultats->fetchAll();
+    
+    return json_encode($result);
+};
  
 ///////////////////////////////////////////////////////////////////
 //Routeur des fonctions appelées en ajax via des param get en url//
@@ -135,6 +150,9 @@ if(isset($_GET["function"])){
             break;    
         case "get_final_test":
             echo $getFinalTest($param1, $connexion);
+            break;    
+        case "get_global_log":
+            echo $getGlobalLog($param1, $param2, $param3, $param4, $connexion);
             break;    
         default:
             echo "no param";

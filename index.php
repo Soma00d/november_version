@@ -52,6 +52,9 @@
             <div id="content_testfwdownload" class="page_content">
                 <?php include('template/repair/testfwdownload.html'); ?>                
             </div>
+            <div id="content_history" class="page_content">
+                <?php include('template/repair/history.html'); ?>                
+            </div>
             <!------------------------------------------------->
             
             <!-- ENGINEERING MODE ---------------------------------->

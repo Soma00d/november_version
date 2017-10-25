@@ -54,6 +54,8 @@ $(document).ready(function(){
     var cobID1;
     var cobID2;
     
+    var activeSearchHistoryResult = {};
+    
     var startNodeMsg;
     var stopNodeMsg;
     
@@ -2478,6 +2480,315 @@ $(document).ready(function(){
         }
            
     }
+    
+    
+    
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////// HISTORY REPAIR SEARCH ////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    
+     $(".history_bt_search").on('click', function(){
+         searchLog();
+     });
+     $(".history_bt_search_page").on('click', function(){
+         searchLogPage();
+     });
+     
+     
+     $(".header_history_table span").on('click', function(){
+        if($(this).hasClass("selected")){
+            $(".header_history_table span").removeClass('selected');
+            $(this).addClass("selected")
+        }else{
+            $(".header_history_table span").removeClass('selected');
+            $(this).addClass("selected")
+        }
+     });
+     
+     $(".id_history").on('click', function(){
+        if($(this).hasClass("asc")){
+            sortCategory('id', true, 'int')
+            $(this).removeClass('asc');
+        }else{
+            sortCategory('id', false, 'int')
+            $(this).addClass('asc');
+        }
+     });
+     $(".pn_history").on('click', function(){
+        if($(this).hasClass("asc")){
+            sortCategory('part_number', true, 'string')
+            $(this).removeClass('asc');
+        }else{
+            sortCategory('part_number', false, 'string')
+            $(this).addClass('asc');
+        }
+     });
+     $(".sn_history").on('click', function(){
+        if($(this).hasClass("asc")){
+            sortCategory('serial_number', true, 'string')
+            $(this).removeClass('asc');
+        }else{
+            sortCategory('serial_number', false, 'string')
+            $(this).addClass('asc');
+        }
+     });
+     $(".date_history").on('click', function(){
+        if($(this).hasClass("asc")){
+            sortCategory('date', true, 'string')
+            $(this).removeClass('asc');
+        }else{
+            sortCategory('date', false, 'string')
+            $(this).addClass('asc');
+        }
+     });
+     $(".sso_history").on('click', function(){
+        if($(this).hasClass("asc")){
+            sortCategory('user_sso', true, 'int')
+            $(this).removeClass('asc');
+        }else{
+            sortCategory('user_sso', false, 'int')
+            $(this).addClass('asc');
+        }
+     });
+     
+     function searchLog(){
+         var historyPNVal = $(".history_pn_input").val().trim();
+         var historySNVal = $(".history_sn_input").val().trim();
+         var historySSOVal = $(".history_sso_input").val().trim();
+         
+         if(historyPNVal == "" && historySNVal == "" && historySSOVal == ""){
+            alert("Fields are empties or not correct.");
+         }else{             
+             $.ajax({
+                //get global log with param1 = PN, param2 = SN, param3 = userSSO, param4= date
+                url : 'php/api.php?function=get_global_log&param1='+historyPNVal+'&param2='+historySNVal+'&param3='+historySSOVal+'&param4',
+                type : 'GET',
+                dataType : 'JSON',
+                success: function(data, statut){
+                    if(data.length == 0){
+                        alert("No result found with this part number.")
+                    }else{
+                        
+                        $(".history_pn_input_page").val(historyPNVal);
+                        $(".history_sn_input_page").val(historySNVal);
+                        $(".history_sso_input_page").val(historySSOVal);
+                        
+                        activeSearchHistoryResult = data;
+                        $(".page_content.active").removeClass("active");
+                        setTimeout(function(){
+                            $(document).find("#content_history").addClass("active");
+                        },100);
+                        generateHistoryResult();
+                    }   
+                }
+            });  
+         }
+     }
+     
+     function searchLogPage(){
+         var historyPNVal = $(".history_pn_input_page").val().trim();
+         var historySNVal = $(".history_sn_input_page").val().trim();
+         var historySSOVal = $(".history_sso_input_page").val().trim();
+         
+         if(historyPNVal == "" && historySNVal == "" && historySSOVal == ""){
+            alert("Fields are empties or not correct.");
+         }else{             
+             $.ajax({
+                //get global log with param1 = PN, param2 = SN, param3 = userSSO, param4= date
+                url : 'php/api.php?function=get_global_log&param1='+historyPNVal+'&param2='+historySNVal+'&param3='+historySSOVal+'&param4',
+                type : 'GET',
+                dataType : 'JSON',
+                success: function(data, statut){
+                    if(data.length == 0){
+                        alert("No result found with this part number.")
+                    }else{
+                        activeSearchHistoryResult = data;                        
+                        generateHistoryResult();
+                    }   
+                }
+            });  
+         }
+     }
+     
+     function generateHistoryResult(){
+         if(activeSearchHistoryResult.length !== 0){
+            $(".history_table .content_history_table").empty();
+            for(var index = 0; index <activeSearchHistoryResult.length; index++){
+                var lineHistory = "<div class='line_history_table' data-index='"+index+"' data-type='"+activeSearchHistoryResult[index].type+"'>"
+                    +"<span class='id_history'>"+activeSearchHistoryResult[index].id+"</span>"
+                    +"<span class='pn_history'>"+activeSearchHistoryResult[index].part_number+"</span>"
+                    +"<span class='sn_history'>"+activeSearchHistoryResult[index].serial_number+"</span>"
+                    +"<span class='sso_history'>"+activeSearchHistoryResult[index].user_sso+"</span>"
+                    +"<span class='type_history'>"+activeSearchHistoryResult[index].type+"</span>"
+                    +"<span class='data_history'><img src='images/open_file.png'></span>"
+                    +"<span class='date_history'>"+activeSearchHistoryResult[index].date+"</span>"
+                +"</div>";
+                $(".history_table .content_history_table").append(lineHistory);
+            }             
+            $(".line_history_table .data_history").on('click', function(){
+                if($(this).parent(".line_history_table").data("type") == "pretest"){
+                    var indexlog = $(this).parent(".line_history_table").data("index");
+                    printHistoryLog(activeSearchHistoryResult[indexlog].json_log, activeSearchHistoryResult[indexlog].part_number, activeSearchHistoryResult[indexlog].serial_number, activeSearchHistoryResult[indexlog].user_sso,activeSearchHistoryResult[indexlog].date);
+                }else if($(this).parent(".line_history_table").data("type")== "finaltest"){
+                    var indexlog = $(this).parent(".line_history_table").data("index");
+                    printHistoryLogFinal(activeSearchHistoryResult[indexlog].json_log, activeSearchHistoryResult[indexlog].part_number, activeSearchHistoryResult[indexlog].serial_number, activeSearchHistoryResult[indexlog].user_sso,activeSearchHistoryResult[indexlog].date);
+                }else{
+                    alert("no type found");
+                }
+            });
+         }else{
+             alert("Error while generating history result.");
+         }
+     };
+    
+    //Generation du rapport de test et affichage de la fenetre d'impression 
+    function printHistoryLog(jsonLog,pn, sn, sso, date){  
+        var msg = JSON.parse(jsonLog);
+        var lineButton = "";
+        var lineLed = "";
+        var lineJoystick = "";
+        var lineBuzzer = "";
+        for(var i =0; i<msg.length; i++){
+            if(msg[i].fct == "button"){
+                if(msg[i].test == "untested"){
+                    var line = "<div><span style='width:100px;display:inline-block;'>"+msg[i].name+"</span> = <span style='color:orange'>"+msg[i].test+"</span></div>"                
+                }
+                if(msg[i].test == "OK"){
+                    var line = "<div><span style='width:100px;display:inline-block;'>"+msg[i].name+"</span> = <span style='color:green'>"+msg[i].test+"</span></div>"                
+                }
+                if(msg[i].test == "FAILED"){
+                    var line = "<div><span style='width:100px;display:inline-block;'>"+msg[i].name+"</span> = <span style='color:red'>"+msg[i].test+"</span></div>"                
+                }
+                
+                lineButton += line;
+            }
+            if(msg[i].fct == "led"){
+                if(msg[i].test == "untested"){
+                    var line = "<div><span style='width:100px;display:inline-block;'>"+msg[i].name+"</span> = <span style='color:orange'>"+msg[i].test+"</span></div>"                
+                }
+                if(msg[i].test == "OK"){
+                    var line = "<div><span style='width:100px;display:inline-block;'>"+msg[i].name+"</span> = <span style='color:green'>"+msg[i].test+"</span></div>"                
+                }
+                if(msg[i].test == "FAILED"){
+                    var line = "<div><span style='width:100px;display:inline-block;'>"+msg[i].name+"</span> = <span style='color:red'>"+msg[i].test+"</span></div>"                
+                }
+                lineLed += line;
+            }
+            if(msg[i].fct == "buzzer"){
+                if(msg[i].test == "untested"){
+                    var line = "<div><span style='width:100px;display:inline-block;'>"+msg[i].name+"</span> = <span style='color:orange'>"+msg[i].test+"</span></div>"                
+                }
+                if(msg[i].test == "OK"){
+                    var line = "<div><span style='width:100px;display:inline-block;'>"+msg[i].name+"</span> = <span style='color:green'>"+msg[i].test+"</span></div>"                
+                }
+                if(msg[i].test == "FAILED"){
+                    var line = "<div><span style='width:100px;display:inline-block;'>"+msg[i].name+"</span> = <span style='color:red'>"+msg[i].test+"</span></div>"                
+                }
+                lineBuzzer += line;
+            }
+            if(msg[i].fct == "joystick"){
+                if(msg[i].test == "untested"){
+                    var line = "<div><span style='width:100px;display:inline-block;'>"+msg[i].name+"</span> = <span style='color:orange'>"+msg[i].test+"</span></div>"                
+                }
+                lineJoystick += line;
+            }
+            
+        }
+        var currentdate = new Date(); 
+        var datetime =  currentdate.getDate() + "/"+ (currentdate.getMonth()+1)  + "/" + currentdate.getFullYear() + " "+ currentdate.getHours() + "h" + currentdate.getMinutes();
+        var myWindow=window.open('','','width=1000,height=800');
+        myWindow.document.write("<h2>PRETEST LOG RECORD - "+date+"</h2><div style='border:1px solid black;padding:5px;'><b>PN</b> : "+pn+" - <b>SN</b> : "+sn+" - <b>Firmware version</b> : 2.0.3 - <b>User SSO</b> : "+sso+"</div><h3>BUTTONS</h3><div>"+lineButton+"</div><h3>BUZZERS</h3><div>"+lineBuzzer+"</div><h3>BACKLIGHTS</h3><div>"+lineLed+"</div>");
+        myWindow.document.close();
+        myWindow.focus();
+        myWindow.print();
+        myWindow.close();
+    };
+    
+    //Generation du rapport de test FINAL et affichage de la fenetre d'impression 
+    function printHistoryLogFinal(jsonLog, pn, sn, sso, date){ 
+        var msg = JSON.parse(jsonLog);
+        var lineButton = "";
+        var lineLed = "";
+        var lineJoystick = "";
+        var lineBuzzer = "";
+        for(var i =0; i<msg.length; i++){
+            if(msg[i].type == "button"){
+                if(msg[i].result == "TEST OK"){
+                    var line = "<div><span style='width:100px;display:inline-block;'>"+msg[i].name+"</span> ("+msg[i].description+") = <span style='color:green'>"+msg[i].result+"</span></div>"                
+                }
+                if(msg[i].result == "TEST FAIL"){
+                    var line = "<div><span style='width:100px;display:inline-block;'>"+msg[i].name+"</span> ("+msg[i].description+") = <span style='color:red'>"+msg[i].result+"</span></div>"                
+                }
+                
+                lineButton += line;
+            }
+            if(msg[i].type == "led"){
+                 if(msg[i].result == "TEST OK"){
+                    var line = "<div><span style='width:100px;display:inline-block;'>"+msg[i].name+"</span> ("+msg[i].description+") = <span style='color:green'>"+msg[i].result+"</span></div>"                
+                }
+                if(msg[i].result == "TEST FAIL"){
+                    var line = "<div><span style='width:100px;display:inline-block;'>"+msg[i].name+"</span> ("+msg[i].description+") = <span style='color:red'>"+msg[i].result+"</span></div>"                
+                }
+                
+                lineLed += line;
+            }
+            if(msg[i].type == "buzzer"){
+                if(msg[i].result == "TEST OK"){
+                    var line = "<div><span style='width:100px;display:inline-block;'>"+msg[i].name+"</span> ("+msg[i].description+") = <span style='color:green'>"+msg[i].result+"</span></div>"                
+                }
+                if(msg[i].result == "TEST FAIL"){
+                    var line = "<div><span style='width:100px;display:inline-block;'>"+msg[i].name+"</span> ("+msg[i].description+") = <span style='color:red'>"+msg[i].result+"</span></div>"                
+                }
+                
+                lineBuzzer += line;
+            }
+            if(msg[i].type == "joystick"){
+                if(msg[i].result == "TEST OK"){
+                    var line = "<div><span style='width:100px;display:inline-block;'>"+msg[i].name+"</span> ("+msg[i].description+") = <span style='color:green'>"+msg[i].result+"</span></div>"                
+                }
+                if(msg[i].result == "TEST FAIL"){
+                    var line = "<div><span style='width:100px;display:inline-block;'>"+msg[i].name+"</span> ("+msg[i].description+") = <span style='color:red'>"+msg[i].result+"</span></div>"                
+                }
+                
+                lineJoystick += line;
+            }
+            
+        }
+        var currentdate = new Date(); 
+        var datetime =  currentdate.getDate() + "/"+ (currentdate.getMonth()+1)  + "/" + currentdate.getFullYear() + " "+ currentdate.getHours() + "h" + currentdate.getMinutes();
+        var myWindow=window.open('','','width=1000,height=800');
+        myWindow.document.write("<h2>FINAL TEST LOG RECORD - "+date+"</h2><div style='border:1px solid black;padding:5px;'><b>PN</b> : "+pn+" - <b>SN</b> : "+sn+" - <b>Firmware version</b> : 2.0.3 - <b>User SSO</b> : "+sso+"</div><h3>BUTTONS</h3><div>"+lineButton+"</div><h3>BUZZERS</h3><div>"+lineBuzzer+"</div><h3>BACKLIGHTS</h3><div>"+lineLed+"</div>");
+        myWindow.document.close();
+        myWindow.focus();
+        myWindow.print();
+        myWindow.close();
+    };
+    
+    
+    function sortBy(field, reverse, primer){
+        var key = primer ? 
+            function(x) {return primer(x[field])} : 
+            function(x) {return x[field]};
+        reverse = !reverse ? 1 : -1;
+        return function (a, b) {
+            return a = key(a), b = key(b), reverse * ((a > b) - (b > a));
+         } 
+    }
+    
+    function sortCategory(category, boolean, type){ 
+        if(type == "int"){
+            activeSearchHistoryResult.sort(sortBy(category, boolean, parseInt));
+        }else if(type == "string"){
+            activeSearchHistoryResult.sort(sortBy(category, boolean, function(a){return a.toUpperCase()}));
+        }        
+        generateHistoryResult();
+    }
+    
+    
+    
+    
+    
+    
     
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////// ON CLICK FUNCTION ////////////////////////////////////////////////////////////////////

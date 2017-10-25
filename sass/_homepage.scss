@@ -68,6 +68,55 @@
                 }
                 
             }
+            .history_search{
+                display: block;
+                margin-left: auto;
+                margin-right: auto;
+                margin-top: 60px;
+                .text_history{
+                    text-align: center;
+                    font-size: 23px;
+                    margin-bottom: 25px;
+                }
+                .history_bloc_line{
+                    font-size:20px;
+                    margin-bottom: 20px;
+                    &.btt{
+                        text-align:center;
+                    }
+                    input{
+                        border: none;
+                        height: 27px;
+                        border-bottom: 1px solid grey;
+                        background: #f3f3f3;
+                        width: 206px;
+                        padding-left: 15px;
+                        color: #3b73b9;
+                        font-size: 22px;
+                        font-family: inspira;
+                    }
+                    .history_pn_input{
+                        margin-left: 22px;
+                    }
+                    .history_sn_input{
+                        margin-left: 10px;
+                    }
+                    .history_sso_input{
+                        margin-left: 53px;
+                    }
+                    .history_bt_search{
+                        color: white;
+                        border-radius: 5px;
+                        box-shadow: 1px 1px 1px black;
+                        background: #3b73b9;
+                        cursor: pointer;
+                        font-size: 18px;
+                        outline: none;
+                        text-align: center;
+                        padding: 5px;
+                    }
+                }
+            }
         }
     }
 }

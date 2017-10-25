@@ -43,8 +43,20 @@ $(document).ready(function(){
         if($(this).hasClass("diagnostic")){
             $(".bt_section").addClass("opacity_off");
             $(this).removeClass("opacity_off");
-            $(".bloc_conatiner .bloc").addClass('hidden');
+            $(".bloc_container .bloc").addClass('hidden');
             $(".login_diag").removeClass("hidden");
+        }
+        if($(this).hasClass("history")){
+            $(".bt_section").addClass("opacity_off");
+            $(this).removeClass("opacity_off");
+            $(".bloc_container .bloc").addClass('hidden');
+            $(".history_search").removeClass("hidden");
+        }
+        if($(this).hasClass("finaltest")){
+            $(".bt_section").addClass("opacity_off");
+            $(this).removeClass("opacity_off");
+            $(".bloc_container .bloc").addClass('hidden');
+            $(".finaltest").removeClass("hidden");
         }
     });
     
