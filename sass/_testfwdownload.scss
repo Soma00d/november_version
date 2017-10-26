@@ -1,4 +1,4 @@
-#content_testfwdownload{
+#content_testfwdownload, #content_testfwdownloadfinal{
     .get_config{
         text-align: center;
         background: #f2f2f2;
@@ -21,7 +21,7 @@
             }
         }        
     }
-    .popup_test_fw{
+    .popup_test_fw_final, .popup_test_fw{
         background: #f2f2f2;
         margin-top: 25px;
         text-align: center;
@@ -72,7 +72,7 @@
             }
         }
     }
-    .bt_continue_diag{
+    .bt_continue_diag, .bt_continue_finaltest{
             display: block;
             box-shadow: 3px 3px 3px black;
             background: #3b73b9;

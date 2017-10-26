@@ -32,6 +32,7 @@ $(document).ready(function(){
     
     //génération des joysticks
     var joystickContainerNew =  $(".joystick_container_new");
+    var joystickContainerNewRepair =  $(".joystick_container_new_repair");
     
     
     var diagInge =  $("#content_toolbox .diag_inge");
@@ -182,7 +183,7 @@ $(document).ready(function(){
                         var photo = data[0].photo_link;
                         family_id = data[0].family;
                         tstName = data[0].tst_name;
-                        sectionRepair = "DIAG";
+                        sectionRepair = "diagnostic";
                         globalName = data[0].family_name;
                         
                         $(".photo_tsui").attr('src', 'images/'+photo);
@@ -194,6 +195,9 @@ $(document).ready(function(){
                         $("#content_home .information_diag").removeClass("hidden");
                         $(".head_userinfo").removeClass("hidden");
                         $(".head_userinfo .info .role_user").html("Repair");
+                        $(".popup_test_fw .bt_no").addClass(sectionRepair);
+                        $(".popup_test_fw .bt_yes").addClass(sectionRepair);
+                        
                         getInfoCard(globalName, cobID2);
                     }    
                     //Recupération du dictionnaire correspondant + remplissage du tableau diagnostique
@@ -209,6 +213,131 @@ $(document).ready(function(){
                                 if(data[iter].type !== "led" && data[iter].type !== "buzzer"){
                                     lineContainer.append("<div class='line id"+data[iter].id+"' data-id='"+data[iter].id+"' data-name='"+data[iter].symbol_name+"' data-function='"+data[iter].type+"'><span class='td'>"+data[iter].symbol_name+"</span><span class='td'>"+data[iter].type+"</span><span class='td'>"+data[iter].description+"</span><span class='td press'>"+data[iter].pressed_val+"</span><span class='td rel'>"+data[iter].released_val+"</span><span class='td photo_piece'><img src='images/"+data[iter].photo_link+"'></span><span class='td totest'>Not tested</span></div>");
                                 }else{
+                                    lineContainer.append("<div class='line id"+data[iter].id+"' data-id='"+data[iter].id+"' data-name='"+data[iter].symbol_name+"' data-function='"+data[iter].type+"'><span class='td'>"+data[iter].symbol_name+"</span><span class='td'>"+data[iter].type+"</span><span class='td'>"+data[iter].description+"</span><span class='td press'>"+data[iter].pressed_val+"</span><span class='td rel'>"+data[iter].released_val+"</span><span class='td photo_piece'><img src='images/"+data[iter].photo_link+"'></span><span class='td test_bt' data-name='"+data[iter].description+"' data-press='"+data[iter].pressed_val+"' data-release='"+data[iter].released_val+"' data-canid='"+data[iter].can_id+"'>TEST</span></div>");
+                                }
+                                if(data[iter].type == "joystick"){                                    
+                                   joystickContainerNewRepair.append("<div class='new_joystick' id='id"+data[iter].id+"'><div class='name'>"+data[iter].description+"</div><div class='area_visual'><div class='area_etalon'><img class='cursor' src='images/cross_red.png'></div></div><div class='values'>x : <span class='x_val'></span> y : <span class='y_val'></span></div></div>");
+                                }
+                            }
+                            //gestion des boutons de test des leds et buzzers
+                            $(".test_bt").on('click',function(){    
+                                var _this = $(this);
+                                var description = $(this).data('name');
+                                var press = $(this).data('press');
+                                var release = $(this).data('release');
+                                var canId = $(this).data('canid');        
+                                var dlc = "0"+(press.toString().length/2)+"0000";
+                                var signalStart = "002400806d68d7551407f09b861e3aad000549a844"+dlc+canId+press;
+                                var signalStop = "002400806d68d7551407f09b861e3aad000549a844"+dlc+canId+release;
+
+                                testPoppin.html("<div class='title'>"+description+"</div><div class='bt_test'><div class='bouton_grey start_bt'>Start</div><div class='bouton_grey stop_bt'>Stop</div></div><div class='result_test'>Did something happen as expected ?</div><div class='bt_test_result'><div class='bouton_grey yes_bt'>YES</div><div class='bouton_grey no_bt'>NO</div></div>");
+
+                                testPoppin.find(".title").html(description);        
+                                testPoppin.removeClass("hidden");
+
+                                testPoppin.find(".start_bt").on('click', function(){                       
+                                    sendSignal(signalStart);                                
+                                });
+                                testPoppin.find(".stop_bt").on('click', function(){                       
+                                    sendSignal(signalStop);
+                                });
+                                testPoppin.find(".yes_bt").on('click', function(){  
+                                    testPoppin.empty();
+                                    testPoppin.addClass("hidden");
+                                    _this.css('background-color','yellowgreen');
+                                    _this.html('TEST OK');
+                                    _this.parent().addClass("tested");
+                                    _this.parent().addClass("testok");
+                                });
+                                testPoppin.find(".no_bt").on('click', function(){   
+                                    testPoppin.empty();
+                                    testPoppin.addClass("hidden");
+                                    _this.css('background-color','red');
+                                    _this.html('TEST FAIL');
+                                    _this.parent().addClass("tested");
+                                });
+                            });
+
+                            $(".totest").on('click',function(){
+                               if($(this).hasClass("tested")){
+                                   $(this).html("Not tested");
+                                   $(this).removeClass("tested");
+                                   $(this).parent().removeClass("tested");
+                               }else{
+                                   $(this).html("Tested");
+                                   $(this).addClass("tested");
+                                   $(this).parent().addClass("tested");
+                               }
+                            });
+                        }
+                    });     
+                }
+            });
+        }else{
+            alert("Some fields are missing");
+        } 
+        
+    }); 
+    
+    //CONNEXION SECTION FINALTEST REPAIR
+    $("#send_info_login_finaltest").on('click', function(){ 
+        alert(addHexVal("00000580", nodeID));
+        userSSO = ($(".login_finaltest #user_sso_input_finaltest").val());
+        partNumber = ($(".login_finaltest #part_number_input_finaltest").val());
+        serialNumber = ($(".login_finaltest #serial_number_input_finaltest").val()); 
+        
+        //definition des id
+        cobID1 = addHexVal("00000580", nodeID);
+        cobID2 = addHexVal("00000600", nodeID);        
+        startNodeMsg = "002400806d68d7551407f09b861e3aad000549a8440200000000000001"+nodeID+"000000000000";
+        stopNodeMsg = "002400806d68d7551407f09b861e3aad000549a8440200000000000002"+nodeID+"000000000000";
+        
+        if(userSSO !== "" && partNumber !== "" && serialNumber !== ""){
+            $.ajax({
+                url : 'php/api.php?function=get_tsui_repair&param1='+partNumber,
+                type : 'GET',
+                dataType : 'JSON',
+                success: function(data, statut){
+                    if(data.length == 0){
+                        alert("No result found with this part number.")
+                    }else{
+                        familyName = data[0].name;
+                        var photo = data[0].photo_link;
+                        family_id = data[0].family;
+                        tstName = data[0].tst_name;
+                        sectionRepair = "finaltest";
+                        globalName = data[0].family_name;
+                        
+                        $(".photo_tsui").attr('src', 'images/'+photo);
+                        $(".title_bloc.name").html(familyName);                    
+                        $(".sso_user").html(userSSO);
+                        $(".part_number").html(partNumber);
+                        $(".serial_number").html(serialNumber);                    
+                        $("#content_home .information").removeClass("hidden");
+                        $("#content_home .information_finaltest").removeClass("hidden");
+                        $(".head_userinfo").removeClass("hidden");
+                        $(".head_userinfo .info .role_user").html("Repair");
+                        $(".popup_test_fw .bt_no").addClass(sectionRepair);
+                        $(".popup_test_fw .bt_yes").addClass(sectionRepair);
+                        
+                        getInfoCard(globalName, cobID2);
+                    }    
+                    //Recupération du dictionnaire correspondant + remplissage du tableau diagnostique
+                    $.ajax({
+                        url : 'php/api.php?function=get_dictionaries_by_id&param1='+family_id,
+                        type : 'GET',
+                        dataType : 'JSON',
+                        success: function(data, statut){
+                            dictionary = data;                
+                            var len = data.length;
+                            lineContainer.empty();
+                            for (var iter = 0; iter < len; iter++) {
+                                if(data[iter].type !== "led" && data[iter].type !== "buzzer"){
+                                    lineContainer.append("<div class='line id"+data[iter].id+"' data-id='"+data[iter].id+"' data-name='"+data[iter].symbol_name+"' data-function='"+data[iter].type+"'><span class='td'>"+data[iter].symbol_name+"</span><span class='td'>"+data[iter].type+"</span><span class='td'>"+data[iter].description+"</span><span class='td press'>"+data[iter].pressed_val+"</span><span class='td rel'>"+data[iter].released_val+"</span><span class='td photo_piece'><img src='images/"+data[iter].photo_link+"'></span><span class='td totest'>Not tested</span></div>");
+                                }else if(data[iter].type == "joystick"){                                    
+                                   joystickContainerNew.append("<div class='new_joystick' id='id"+data[iter].id+"'><div class='name'>"+data[iter].description+"</div><div class='area_visual'><div class='area_etalon'><img class='cursor' src='images/cross_red.png'></div></div><div class='values'>x : <span class='x_val'></span> y : <span class='y_val'></span></div></div>");
+                                }
+                                else{
                                     lineContainer.append("<div class='line id"+data[iter].id+"' data-id='"+data[iter].id+"' data-name='"+data[iter].symbol_name+"' data-function='"+data[iter].type+"'><span class='td'>"+data[iter].symbol_name+"</span><span class='td'>"+data[iter].type+"</span><span class='td'>"+data[iter].description+"</span><span class='td press'>"+data[iter].pressed_val+"</span><span class='td rel'>"+data[iter].released_val+"</span><span class='td photo_piece'><img src='images/"+data[iter].photo_link+"'></span><span class='td test_bt' data-name='"+data[iter].description+"' data-press='"+data[iter].pressed_val+"' data-release='"+data[iter].released_val+"' data-canid='"+data[iter].can_id+"'>TEST</span></div>");
                                 }
                             }
@@ -274,116 +403,7 @@ $(document).ready(function(){
     
     
     
-    //recupération des infos tsui homepage
-    $("#send_info_hp").on('click', function(){
-        userSSO = ($("#user_sso_input").val());
-        partNumber = ($("#part_number_input").val());
-        serialNumber = ($("#serial_number_input").val());  
-        
-        //definition des id
-        cobID1 = addHexVal("00000580", nodeID);
-        cobID2 = addHexVal("00000600", nodeID);        
-        startNodeMsg = "002400806d68d7551407f09b861e3aad000549a8440200000000000001"+nodeID+"000000000000";
-        stopNodeMsg = "002400806d68d7551407f09b861e3aad000549a8440200000000000002"+nodeID+"000000000000";
-        
-        if(userSSO !== "" && partNumber !== "" && serialNumber !== ""){
-            $.ajax({
-            url : 'php/api.php?function=get_tsui&param1='+partNumber,
-            type : 'GET',
-            dataType : 'JSON',
-            success: function(data, statut){
-                if(data.length == 0){
-                    alert("No result found with this part number.")
-                }else{
-                    familyName = data[0].name;
-                    var photo = data[0].photo_link;
-                    sequences = data[0].linked_sequence;
-                    family_id = data[0].family;
-                    tstName = data[0].tst_name;
-                    $(".photo_tsui").attr('src', 'images/'+photo);
-                    $(".title_bloc.name").html(familyName);                    
-                    $(".sso_user").html(userSSO);
-                    $(".part_number").html(partNumber);
-                    $(".serial_number").html(serialNumber);                    
-                    $("#content_home .information").removeClass("hidden");
-                    $(".head_userinfo").removeClass("hidden");
-                    $(".head_userinfo .info .role_user").html("Repair");
-                    getInfoCard(globalName, cobID2);
-                }    
-                //Recupération du dictionnaire correspondant + remplissage du tableau diagnostique
-                $.ajax({
-                    url : 'php/api.php?function=get_dictionaries_by_id&param1='+family_id,
-                    type : 'GET',
-                    dataType : 'JSON',
-                    success: function(data, statut){
-                        dictionary = data;                
-                        var len = data.length;
-                        lineContainer.empty();
-                        for (var iter = 0; iter < len; iter++) {
-                            if(data[iter].type !== "led" && data[iter].type !== "buzzer"){
-                                lineContainer.append("<div class='line id"+data[iter].id+"' data-id='"+data[iter].id+"' data-name='"+data[iter].symbol_name+"' data-function='"+data[iter].type+"'><span class='td'>"+data[iter].symbol_name+"</span><span class='td'>"+data[iter].type+"</span><span class='td'>"+data[iter].description+"</span><span class='td press'>"+data[iter].pressed_val+"</span><span class='td rel'>"+data[iter].released_val+"</span><span class='td photo_piece'><img src='images/"+data[iter].photo_link+"'></span><span class='td totest'>Not tested</span></div>");
-                            }else{
-                                lineContainer.append("<div class='line id"+data[iter].id+"' data-id='"+data[iter].id+"' data-name='"+data[iter].symbol_name+"' data-function='"+data[iter].type+"'><span class='td'>"+data[iter].symbol_name+"</span><span class='td'>"+data[iter].type+"</span><span class='td'>"+data[iter].description+"</span><span class='td press'>"+data[iter].pressed_val+"</span><span class='td rel'>"+data[iter].released_val+"</span><span class='td photo_piece'><img src='images/"+data[iter].photo_link+"'></span><span class='td test_bt' data-name='"+data[iter].description+"' data-press='"+data[iter].pressed_val+"' data-release='"+data[iter].released_val+"' data-canid='"+data[iter].can_id+"'>TEST</span></div>");
-                            }
-                        }
-                        //gestion des boutons de test des leds et buzzers
-                        $(".test_bt").on('click',function(){    
-                            var _this = $(this);
-                            var description = $(this).data('name');
-                            var press = $(this).data('press');
-                            var release = $(this).data('release');
-                            var canId = $(this).data('canid');        
-                            var dlc = "0"+(press.toString().length/2)+"0000";
-                            var signalStart = "002400806d68d7551407f09b861e3aad000549a844"+dlc+canId+press;
-                            var signalStop = "002400806d68d7551407f09b861e3aad000549a844"+dlc+canId+release;
-                            
-                            testPoppin.html("<div class='title'>"+description+"</div><div class='bt_test'><div class='bouton_grey start_bt'>Start</div><div class='bouton_grey stop_bt'>Stop</div></div><div class='result_test'>Did something happen as expected ?</div><div class='bt_test_result'><div class='bouton_grey yes_bt'>YES</div><div class='bouton_grey no_bt'>NO</div></div>");
-                            
-                            testPoppin.find(".title").html(description);        
-                            testPoppin.removeClass("hidden");
-
-                            testPoppin.find(".start_bt").on('click', function(){                       
-                                sendSignal(signalStart);                                
-                            });
-                            testPoppin.find(".stop_bt").on('click', function(){                       
-                                sendSignal(signalStop);
-                            });
-                            testPoppin.find(".yes_bt").on('click', function(){  
-                                testPoppin.empty();
-                                testPoppin.addClass("hidden");
-                                _this.css('background-color','yellowgreen');
-                                _this.html('TEST OK');
-                                _this.parent().addClass("tested");
-                                _this.parent().addClass("testok");
-                            });
-                            testPoppin.find(".no_bt").on('click', function(){   
-                                testPoppin.empty();
-                                testPoppin.addClass("hidden");
-                                _this.css('background-color','red');
-                                _this.html('TEST FAIL');
-                                _this.parent().addClass("tested");
-                            });
-                        });
-                        
-                        $(".totest").on('click',function(){
-                           if($(this).hasClass("tested")){
-                               $(this).html("Not tested");
-                               $(this).removeClass("tested");
-                               $(this).parent().removeClass("tested");
-                           }else{
-                               $(this).html("Tested");
-                               $(this).addClass("tested");
-                               $(this).parent().addClass("tested");
-                           }
-                        });
-                    }
-                });        
-            }
-         });
-        }else{
-            alert("Some fields are missing");
-        }        
-    }); 
+    
     
     
     
@@ -614,156 +634,156 @@ $(document).ready(function(){
                                     
                                     if(part0 != "00"){
                                         if(dictionary[nb].x_pos == "0"){
-                                            joystickContainerNew.find('#id'+dictionary[nb].id+' .cursor').css({'left':convertHexa(part0)+'%'});
-                                            joystickContainerNew.find('#id'+dictionary[nb].id+' .values .x_val').html(convertHexa(part0)+'%');
+                                            joystickContainerNewRepair.find('#id'+dictionary[nb].id+' .cursor').css({'left':convertHexa(part0)+'%'});
+                                            joystickContainerNewRepair.find('#id'+dictionary[nb].id+' .values .x_val').html(convertHexa(part0)+'%');
                                             
                                         }
                                         if(dictionary[nb].y_pos == "0"){
-                                            joystickContainerNew.find('#id'+dictionary[nb].id+' .cursor').css({'top':(convertHexa(part0)*-1)+'%'});
-                                            joystickContainerNew.find('#id'+dictionary[nb].id+' .values .y_val').html(convertHexa(part0)+'%');
+                                            joystickContainerNewRepair.find('#id'+dictionary[nb].id+' .cursor').css({'top':(convertHexa(part0)*-1)+'%'});
+                                            joystickContainerNewRepair.find('#id'+dictionary[nb].id+' .values .y_val').html(convertHexa(part0)+'%');
                                         }
                                     }else{
                                         if(dictionary[nb].x_pos == "0"){
-                                            joystickContainerNew.find('#id'+dictionary[nb].id+' .cursor').css({'left':'0%'});
-                                            joystickContainerNew.find('#id'+dictionary[nb].id+' .values .x_val').html('0%');
+                                            joystickContainerNewRepair.find('#id'+dictionary[nb].id+' .cursor').css({'left':'0%'});
+                                            joystickContainerNewRepair.find('#id'+dictionary[nb].id+' .values .x_val').html('0%');
                                         }
                                         if(dictionary[nb].y_pos == "0"){
-                                            joystickContainerNew.find('#id'+dictionary[nb].id+' .cursor').css({'top':'0%'});
-                                            joystickContainerNew.find('#id'+dictionary[nb].id+' .values .y_val').html('0%');
+                                            joystickContainerNewRepair.find('#id'+dictionary[nb].id+' .cursor').css({'top':'0%'});
+                                            joystickContainerNewRepair.find('#id'+dictionary[nb].id+' .values .y_val').html('0%');
                                         }
                                     }
                                     if(part1 != "00"){
                                         if(dictionary[nb].x_pos == "2"){
-                                            joystickContainerNew.find('#id'+dictionary[nb].id+' .cursor').css({'left':convertHexa(part1)+'%'});
-                                            joystickContainerNew.find('#id'+dictionary[nb].id+' .values .x_val').html(convertHexa(part1)+'%');
+                                            joystickContainerNewRepair.find('#id'+dictionary[nb].id+' .cursor').css({'left':convertHexa(part1)+'%'});
+                                            joystickContainerNewRepair.find('#id'+dictionary[nb].id+' .values .x_val').html(convertHexa(part1)+'%');
                                         }
                                         if(dictionary[nb].y_pos == "2"){
-                                            joystickContainerNew.find('#id'+dictionary[nb].id+' .cursor').css({'top':(convertHexa(part1)*-1)+'%'});
-                                            joystickContainerNew.find('#id'+dictionary[nb].id+' .values .y_val').html(convertHexa(part1)+'%');
+                                            joystickContainerNewRepair.find('#id'+dictionary[nb].id+' .cursor').css({'top':(convertHexa(part1)*-1)+'%'});
+                                            joystickContainerNewRepair.find('#id'+dictionary[nb].id+' .values .y_val').html(convertHexa(part1)+'%');
                                         }
                                     }else{
                                         if(dictionary[nb].x_pos == "2"){
-                                            joystickContainerNew.find('#id'+dictionary[nb].id+' .cursor').css({'left':'0%'});
-                                            joystickContainerNew.find('#id'+dictionary[nb].id+' .values .x_val').html('0%');
+                                            joystickContainerNewRepair.find('#id'+dictionary[nb].id+' .cursor').css({'left':'0%'});
+                                            joystickContainerNewRepair.find('#id'+dictionary[nb].id+' .values .x_val').html('0%');
                                         }
                                         if(dictionary[nb].y_pos == "2"){
-                                            joystickContainerNew.find('#id'+dictionary[nb].id+' .cursor').css({'top':'0%'});
-                                            joystickContainerNew.find('#id'+dictionary[nb].id+' .values .y_val').html('0%');
+                                            joystickContainerNewRepair.find('#id'+dictionary[nb].id+' .cursor').css({'top':'0%'});
+                                            joystickContainerNewRepair.find('#id'+dictionary[nb].id+' .values .y_val').html('0%');
                                         }
                                     }
                                     if(part2 != "00"){
                                         if(dictionary[nb].x_pos == "4"){
-                                            joystickContainerNew.find('#id'+dictionary[nb].id+' .cursor').css({'left':convertHexa(part2)+'%'});
-                                            joystickContainerNew.find('#id'+dictionary[nb].id+' .values .x_val').html(convertHexa(part2)+'%');
+                                            joystickContainerNewRepair.find('#id'+dictionary[nb].id+' .cursor').css({'left':convertHexa(part2)+'%'});
+                                            joystickContainerNewRepair.find('#id'+dictionary[nb].id+' .values .x_val').html(convertHexa(part2)+'%');
                                         }
                                         if(dictionary[nb].y_pos == "4"){
-                                            joystickContainerNew.find('#id'+dictionary[nb].id+' .cursor').css({'top':(convertHexa(part2)*-1)+'%'});
-                                            joystickContainerNew.find('#id'+dictionary[nb].id+' .values .y_val').html(convertHexa(part2)+'%');
+                                            joystickContainerNewRepair.find('#id'+dictionary[nb].id+' .cursor').css({'top':(convertHexa(part2)*-1)+'%'});
+                                            joystickContainerNewRepair.find('#id'+dictionary[nb].id+' .values .y_val').html(convertHexa(part2)+'%');
                                         }
                                     }else{
                                         if(dictionary[nb].x_pos == "4"){
-                                            joystickContainerNew.find('#id'+dictionary[nb].id+' .cursor').css({'left':'0%'});
-                                            joystickContainerNew.find('#id'+dictionary[nb].id+' .values .x_val').html('0%');
+                                            joystickContainerNewRepair.find('#id'+dictionary[nb].id+' .cursor').css({'left':'0%'});
+                                            joystickContainerNewRepair.find('#id'+dictionary[nb].id+' .values .x_val').html('0%');
                                         }
                                         if(dictionary[nb].y_pos == "4"){
-                                            joystickContainerNew.find('#id'+dictionary[nb].id+' .cursor').css({'top':'0%'});
-                                            joystickContainerNew.find('#id'+dictionary[nb].id+' .values .y_val').html('0%');
+                                            joystickContainerNewRepair.find('#id'+dictionary[nb].id+' .cursor').css({'top':'0%'});
+                                            joystickContainerNewRepair.find('#id'+dictionary[nb].id+' .values .y_val').html('0%');
                                         }
                                     }
                                     if(part3 != "00"){
                                         if(dictionary[nb].x_pos == "6"){
-                                            joystickContainerNew.find('#id'+dictionary[nb].id+' .cursor').css({'left':convertHexa(part3)+'%'});
-                                            joystickContainerNew.find('#id'+dictionary[nb].id+' .values .x_val').html(convertHexa(part3)+'%');
+                                            joystickContainerNewRepair.find('#id'+dictionary[nb].id+' .cursor').css({'left':convertHexa(part3)+'%'});
+                                            joystickContainerNewRepair.find('#id'+dictionary[nb].id+' .values .x_val').html(convertHexa(part3)+'%');
                                         }
                                         if(dictionary[nb].y_pos == "6"){
-                                            joystickContainerNew.find('#id'+dictionary[nb].id+' .cursor').css({'top':(convertHexa(part3)*-1)+'%'});
-                                            joystickContainerNew.find('#id'+dictionary[nb].id+' .values .y_val').html(convertHexa(part3)+'%');
+                                            joystickContainerNewRepair.find('#id'+dictionary[nb].id+' .cursor').css({'top':(convertHexa(part3)*-1)+'%'});
+                                            joystickContainerNewRepair.find('#id'+dictionary[nb].id+' .values .y_val').html(convertHexa(part3)+'%');
                                         }
                                     }else{
                                         if(dictionary[nb].x_pos == "6"){
-                                            joystickContainerNew.find('#id'+dictionary[nb].id+' .cursor').css({'left':'0%'});
-                                            joystickContainerNew.find('#id'+dictionary[nb].id+' .values .x_val').html('0%');
+                                            joystickContainerNewRepair.find('#id'+dictionary[nb].id+' .cursor').css({'left':'0%'});
+                                            joystickContainerNewRepair.find('#id'+dictionary[nb].id+' .values .x_val').html('0%');
                                         }
                                         if(dictionary[nb].y_pos == "6"){
-                                            joystickContainerNew.find('#id'+dictionary[nb].id+' .cursor').css({'top':'0%'});
-                                            joystickContainerNew.find('#id'+dictionary[nb].id+' .values .y_val').html('0%');
+                                            joystickContainerNewRepair.find('#id'+dictionary[nb].id+' .cursor').css({'top':'0%'});
+                                            joystickContainerNewRepair.find('#id'+dictionary[nb].id+' .values .y_val').html('0%');
                                         }
                                     }
                                     if(part4 != "00"){
                                         if(dictionary[nb].x_pos == "8"){
-                                            joystickContainerNew.find('#id'+dictionary[nb].id+' .cursor').css({'left':convertHexa(part4)+'%'});
-                                            joystickContainerNew.find('#id'+dictionary[nb].id+' .values .x_val').html(convertHexa(part4)+'%');
+                                            joystickContainerNewRepair.find('#id'+dictionary[nb].id+' .cursor').css({'left':convertHexa(part4)+'%'});
+                                            joystickContainerNewRepair.find('#id'+dictionary[nb].id+' .values .x_val').html(convertHexa(part4)+'%');
                                         }
                                         if(dictionary[nb].y_pos == "8"){
-                                            joystickContainerNew.find('#id'+dictionary[nb].id+' .cursor').css({'top':(convertHexa(part4)*-1)+'%'});
-                                            joystickContainerNew.find('#id'+dictionary[nb].id+' .values .y_val').html(convertHexa(part4)+'%');
+                                            joystickContainerNewRepair.find('#id'+dictionary[nb].id+' .cursor').css({'top':(convertHexa(part4)*-1)+'%'});
+                                            joystickContainerNewRepair.find('#id'+dictionary[nb].id+' .values .y_val').html(convertHexa(part4)+'%');
                                         }
                                     }else{
                                         if(dictionary[nb].x_pos == "8"){
-                                            joystickContainerNew.find('#id'+dictionary[nb].id+' .cursor').css({'left':'0%'});
-                                            joystickContainerNew.find('#id'+dictionary[nb].id+' .values .x_val').html('0%');
+                                            joystickContainerNewRepair.find('#id'+dictionary[nb].id+' .cursor').css({'left':'0%'});
+                                            joystickContainerNewRepair.find('#id'+dictionary[nb].id+' .values .x_val').html('0%');
                                         }
                                         if(dictionary[nb].y_pos == "8"){
-                                            joystickContainerNew.find('#id'+dictionary[nb].id+' .cursor').css({'top':'0%'});
-                                            joystickContainerNew.find('#id'+dictionary[nb].id+' .values .y_val').html('0%');
+                                            joystickContainerNewRepair.find('#id'+dictionary[nb].id+' .cursor').css({'top':'0%'});
+                                            joystickContainerNewRepair.find('#id'+dictionary[nb].id+' .values .y_val').html('0%');
                                         }
                                     }
                                     if(part5 != "00"){
                                         if(dictionary[nb].x_pos == "10"){
-                                            joystickContainerNew.find('#id'+dictionary[nb].id+' .cursor').css({'left':convertHexa(part5)+'%'});
-                                            joystickContainerNew.find('#id'+dictionary[nb].id+' .values .x_val').html(convertHexa(part5)+'%');
+                                            joystickContainerNewRepair.find('#id'+dictionary[nb].id+' .cursor').css({'left':convertHexa(part5)+'%'});
+                                            joystickContainerNewRepair.find('#id'+dictionary[nb].id+' .values .x_val').html(convertHexa(part5)+'%');
                                         }
                                         if(dictionary[nb].y_pos == "10"){
-                                            joystickContainerNew.find('#id'+dictionary[nb].id+' .cursor').css({'top':(convertHexa(part5)*-1)+'%'});
-                                            joystickContainerNew.find('#id'+dictionary[nb].id+' .values .y_val').html(convertHexa(part5)+'%');
+                                            joystickContainerNewRepair.find('#id'+dictionary[nb].id+' .cursor').css({'top':(convertHexa(part5)*-1)+'%'});
+                                            joystickContainerNewRepair.find('#id'+dictionary[nb].id+' .values .y_val').html(convertHexa(part5)+'%');
                                         }
                                     }else{
                                         if(dictionary[nb].x_pos == "10"){
-                                            joystickContainerNew.find('#id'+dictionary[nb].id+' .cursor').css({'left':'0%'});
-                                            joystickContainerNew.find('#id'+dictionary[nb].id+' .values .x_val').html('0%');
+                                            joystickContainerNewRepair.find('#id'+dictionary[nb].id+' .cursor').css({'left':'0%'});
+                                            joystickContainerNewRepair.find('#id'+dictionary[nb].id+' .values .x_val').html('0%');
                                         }
                                         if(dictionary[nb].y_pos == "10"){
-                                            joystickContainerNew.find('#id'+dictionary[nb].id+' .cursor').css({'top':'0%'});
-                                            joystickContainerNew.find('#id'+dictionary[nb].id+' .values .y_val').html('0%');
+                                            joystickContainerNewRepair.find('#id'+dictionary[nb].id+' .cursor').css({'top':'0%'});
+                                            joystickContainerNewRepair.find('#id'+dictionary[nb].id+' .values .y_val').html('0%');
                                         }
                                     }
                                     if(part6 != "00"){
                                         if(dictionary[nb].x_pos == "12"){
-                                            joystickContainerNew.find('#id'+dictionary[nb].id+' .cursor').css({'left':convertHexa(part6)+'%'});
-                                            joystickContainerNew.find('#id'+dictionary[nb].id+' .values .x_val').html(convertHexa(part6)+'%');
+                                            joystickContainerNewRepair.find('#id'+dictionary[nb].id+' .cursor').css({'left':convertHexa(part6)+'%'});
+                                            joystickContainerNewRepair.find('#id'+dictionary[nb].id+' .values .x_val').html(convertHexa(part6)+'%');
                                         }
                                         if(dictionary[nb].y_pos == "12"){
-                                            joystickContainerNew.find('#id'+dictionary[nb].id+' .cursor').css({'top':(convertHexa(part6)*-1)+'%'});
-                                            joystickContainerNew.find('#id'+dictionary[nb].id+' .values .y_val').html(convertHexa(part6)+'%');
+                                            joystickContainerNewRepair.find('#id'+dictionary[nb].id+' .cursor').css({'top':(convertHexa(part6)*-1)+'%'});
+                                            joystickContainerNewRepair.find('#id'+dictionary[nb].id+' .values .y_val').html(convertHexa(part6)+'%');
                                         }
                                     }else{
                                         if(dictionary[nb].x_pos == "12"){
-                                            joystickContainerNew.find('#id'+dictionary[nb].id+' .cursor').css({'left':'0%'});
-                                            joystickContainerNew.find('#id'+dictionary[nb].id+' .values .x_val').html('0%');
+                                            joystickContainerNewRepair.find('#id'+dictionary[nb].id+' .cursor').css({'left':'0%'});
+                                            joystickContainerNewRepair.find('#id'+dictionary[nb].id+' .values .x_val').html('0%');
                                         }
                                         if(dictionary[nb].y_pos == "12"){
-                                            joystickContainerNew.find('#id'+dictionary[nb].id+' .cursor').css({'top':'0%'});
-                                            joystickContainerNew.find('#id'+dictionary[nb].id+' .values .y_val').html('0%');
+                                            joystickContainerNewRepair.find('#id'+dictionary[nb].id+' .cursor').css({'top':'0%'});
+                                            joystickContainerNewRepair.find('#id'+dictionary[nb].id+' .values .y_val').html('0%');
                                         }
                                     }
                                     if(part7 != "00"){
                                         if(dictionary[nb].x_pos == "14"){
-                                            joystickContainerNew.find('#id'+dictionary[nb].id+' .cursor').css({'left':convertHexa(part7)+'%'});
-                                            joystickContainerNew.find('#id'+dictionary[nb].id+' .values .x_val').html(convertHexa(part7)+'%');
+                                            joystickContainerNewRepair.find('#id'+dictionary[nb].id+' .cursor').css({'left':convertHexa(part7)+'%'});
+                                            joystickContainerNewRepair.find('#id'+dictionary[nb].id+' .values .x_val').html(convertHexa(part7)+'%');
                                         }
                                         if(dictionary[nb].y_pos == "14"){
-                                            joystickContainerNew.find('#id'+dictionary[nb].id+' .cursor').css({'top':(convertHexa(part7)*-1)+'%'});
-                                            joystickContainerNew.find('#id'+dictionary[nb].id+' .values y_val').html(convertHexa(part7)+'%');
+                                            joystickContainerNewRepair.find('#id'+dictionary[nb].id+' .cursor').css({'top':(convertHexa(part7)*-1)+'%'});
+                                            joystickContainerNewRepair.find('#id'+dictionary[nb].id+' .values y_val').html(convertHexa(part7)+'%');
                                             
                                         }
                                     }else{
                                         if(dictionary[nb].x_pos == "14"){
-                                            joystickContainerNew.find('#id'+dictionary[nb].id+' .cursor').css({'left':'0%'});
-                                            joystickContainerNew.find('#id'+dictionary[nb].id+' .values .x_val').html('0%');
+                                            joystickContainerNewRepair.find('#id'+dictionary[nb].id+' .cursor').css({'left':'0%'});
+                                            joystickContainerNewRepair.find('#id'+dictionary[nb].id+' .values .x_val').html('0%');
                                         }
                                         if(dictionary[nb].y_pos == "14"){
-                                            joystickContainerNew.find('#id'+dictionary[nb].id+' .cursor').css({'top':'0%'});
-                                            joystickContainerNew.find('#id'+dictionary[nb].id+' .values .y_val').html('0%');
+                                            joystickContainerNewRepair.find('#id'+dictionary[nb].id+' .cursor').css({'top':'0%'});
+                                            joystickContainerNewRepair.find('#id'+dictionary[nb].id+' .values .y_val').html('0%');
                                         }
                                     }                                    
                                     break;
@@ -850,15 +870,15 @@ $(document).ready(function(){
                     var globalVoltage = message.globv;
                     
                     safetyFrequency = convertHexaPic(safetyFrequency);
-                    safetyVoltage = convertHexaPic(safetyVoltage)*0.138;
+                    safetyVoltage = convertHexaPic(safetyVoltage)/51/0.138;
                     enableFrequency = convertHexaPic(enableFrequency);
-                    enableVoltage = convertHexaPic(enableVoltage)*0.138;
-                    globalVoltage = convertHexaPic(globalVoltage)*0.1375; 
-                    
+                    enableVoltage = convertHexaPic(enableVoltage)/51/0.138;
+                    globalVoltage = convertHexaPic(globalVoltage)/51/0.1375;
+
                     safetyFreqContainer.html(safetyFrequency);
-                    safetyVoltContainer.html(safetyVoltage);
+                    safetyVoltContainer.html(safetyVoltage.toFixed(2));
                     enableFreqContainer.html(enableFrequency);
-                    enableVoltContainer.html(enableVoltage);
+                    enableVoltContainer.html(enableVoltage.toFixed(2));
                     supplyContainer.html(globalVoltage.toFixed(2)+" V");
                     
                     safetySRTL.html(srtl.substring(0,1));
@@ -2265,6 +2285,7 @@ $(document).ready(function(){
     document.getElementById('fileinput').addEventListener('change', readSingleFile, false);
     document.getElementById('fileinput2').addEventListener('change', readSingleFile, false);
     document.getElementById('fileinput3').addEventListener('change', readSingleFile, false);
+    document.getElementById('fileinput4').addEventListener('change', readSingleFile, false);
     
     $(".testing_upl .start_download").on('click', function(){
         startDownload(cobID2);

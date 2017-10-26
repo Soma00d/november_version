@@ -1,4 +1,20 @@
 #content_calibration{
+    .continue_to_finaltest{
+        margin-top: 21px;
+        background: #3b73b9;
+        color: white;
+        font-size: 20px;
+        width: 210px;
+        height: 30px;
+        border-radius: 5px;
+        box-shadow: 1px 1px 1px black;
+        padding-top: 8px;
+        cursor: pointer;
+        margin-left: auto;
+        margin-right: auto;
+        margin-bottom: 10px;
+        text-align: center;
+    }
     .bt_moins{
         border: 1px solid black;
         cursor: pointer;
@@ -190,7 +206,6 @@
     .canvas_jauge{
         position: relative;
         width: 235px;
-        height: 500px;
         margin-left: auto;
         margin-right: auto;
         display: inline-block;

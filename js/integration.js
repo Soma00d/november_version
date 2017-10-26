@@ -56,13 +56,18 @@ $(document).ready(function(){
             $(".bt_section").addClass("opacity_off");
             $(this).removeClass("opacity_off");
             $(".bloc_container .bloc").addClass('hidden');
-            $(".finaltest").removeClass("hidden");
+            $(".login_finaltest").removeClass("hidden");
         }
     });
     
     $(".popup_test_fw .bt_yes").on("click", function(){
         $(".download_test_fw_content").removeClass("hidden");
         $(".popup_test_fw").addClass("hidden");
+    });
+    
+    $(".popup_test_fw_final .bt_yes").on("click", function(){
+        $(".download_test_fw_content_final").removeClass("hidden");
+        $(".popup_test_fw_final").addClass("hidden");
     });
     
     
