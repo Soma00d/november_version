@@ -32,8 +32,13 @@ $(document).ready(function(){
     
     //génération des joysticks
     var joystickContainerNew =  $(".joystick_container_new");
+    var joystickCalibrationContainer =  $(".calibration_zone_container");
+    var joystickVerifyContainer =  $(".calibration_test_container");
     var joystickContainerNewRepair =  $(".joystick_container_new_repair");
-    
+    var intervalVerify;
+    var currentIdentifier;
+    var currentSubindexX;
+    var currentSubindexY;
     
     var diagInge =  $("#content_toolbox .diag_inge");
     var diagIngeComponent =  $("#content_toolbox .diag_inge .diag_component");  
@@ -104,18 +109,13 @@ $(document).ready(function(){
     var filterData;
     
     //Calibration
-    var calibrateBt1 = $(".calibrate_bt_1");
-    var calibrateBt2 = $(".calibrate_bt_2");
-    var calibrateBt3 = $(".calibrate_bt_3");
+    var calibrateContainer = $(".calibration_zone_container");
     var waitCalibResponse = "";
     var finalResponseData;
     
-    var axisRawValueX1;
-    var axisRawValueY1;
-    var axisRawValueX2;
-    var axisRawValueY2;
-    var axisRawValueX3;
-    var axisRawValueY3;
+    var axisRawValueX;
+    var axisRawValueY;
+   
     
     var joystick1Val = $(".realtime_joysticks_val.joystick1");
     var joystick2Val = $(".realtime_joysticks_val.joystick2");
@@ -510,6 +510,33 @@ $(document).ready(function(){
                                    break;
                                 case "joystick":
                                    joystickContainerNew.append("<div class='new_joystick' id='id"+data[iter].id+"'><div class='name'>"+data[iter].description+"</div><div class='area_visual'><div class='area_etalon'><img class='cursor' src='images/cross_red.png'></div></div><div class='values'>x : <span class='x_val'></span> y : <span class='y_val'></span></div></div>");
+                                   joystickCalibrationContainer.append("<div class='bloc_calibrate id"+data[iter].id+"'>"
+                                        +"<div class='title_jauge'>"+data[iter].description+"</div>"            
+                                        +"<div class='calibrate_bt'>"
+                                            +"<button data-long='"+data[iter].calib_subindex_x+"' data-lat='"+data[iter].calib_subindex_y+"' data-id='"+data[iter].id+"'>Calibrate</button>"
+                                            +"<div class='calibrate_tool hidden'>"
+                                                +"<div class='status_calib'></div>"
+                                                +"<div class='action_calib'></div>"
+                                                +"<div class='validate_calib'>Validate</div>"
+                                            +"</div>"
+                                        +"</div>"
+                                    +"</div>");
+                                    joystickVerifyContainer.append("<div class='realtime_joysticks_val id"+data[iter].id+"'>"
+                                        +"<div class='joystick_val_info'>"
+                                            +"<button class='verify_calibration id"+data[iter].id+"' data-long='"+data[iter].calib_subindex_x+"' data-lat='"+data[iter].calib_subindex_y+"' data-id='"+data[iter].id+"'>Verify</button> "
+                                            +"<button class='stop_calibration_verif id"+data[iter].id+"' data-id='"+data[iter].id+"'>Stop</button><br><br>"
+                                            +"<div class='bloc_left_joy'>"
+                                                +"<span class='text_config'>X : </span><span class='x_value_joy'>0</span><br>"
+                                                +"<span class='text_config'>Min X : </span><span class='minx_value_joy'>0</span><br>"
+                                                +"<span class='text_config'>Max X : </span><span class='maxx_value_joy'>0</span><br>"
+                                            +"</div>"
+                                            +"<div class='bloc_right_joy'>"
+                                                +"<span class='text_config'>Y : </span><span class='y_value_joy'>0</span><br>"
+                                                +"<span class='text_config'>Min Y : </span><span class='miny_value_joy'>0</span><br>"
+                                                +"<span class='text_config'>Max Y : </span><span class='maxy_value_joy'>0</span>"
+                                            +"</div>"
+                                        +"</div>"
+                                    +"</div>");
                                    break;
                             }
                             if(data[iter].is_safety =="1"){
@@ -550,7 +577,27 @@ $(document).ready(function(){
                                     sendSignal(postSignal+flashSignal);
                                 }
                             }
-                        })
+                        });
+                        calibrateContainer.find(".calibrate_bt button").on('click', function(){
+                            var subindexX = $(this).data('long');
+                            var subindexY = $(this).data('lat');
+                            var id = $(this).data('id');
+                            $(this).addClass("hidden");
+                            if(subindexX == ""){subindexX = "null"}
+                            if(subindexY == ""){subindexY = "null"}
+                            startCalibrate(subindexX, subindexY, id);
+                        });
+                        
+                        $(".verify_calibration").on('click', function(){
+                            var subindexX = $(this).data('long');
+                            var subindexY = $(this).data('lat');
+                            var identifier = $(this).data('id');
+                            startVerifyCalibration(subindexX, subindexY, identifier);
+                        });
+                        $(".stop_calibration_verif").on('click', function(){
+                            var identifier = $(this).data('id');
+                            stopVerifyCalibration();
+                        });
                     }
                 });        
             }
@@ -854,6 +901,28 @@ $(document).ready(function(){
                                 waitDownloadResponse = "";
                             }
                         }
+                    }
+                }
+                break;
+            case "CALIBRATION_VERIFY":
+                var message = JSON.parse(event.data);        
+                console.log(event.data);
+                if(message.type =="from_GW"){
+                    var canId = message.canId;
+                    var canData = message.canData; 
+                    
+                    if(canId == cobID1){
+                        console.log("match" +currentIdentifier);
+                        var subindex = canData.substring(6,8);
+                        var verifyVal = canData.substring(8,10);
+                        if(subindex == currentSubindexX){
+                            updateVerifyData(verifyVal, "x",currentIdentifier);
+                        }else if(subindex == currentSubindexY){
+                            updateVerifyData(verifyVal, "y",currentIdentifier);
+                        }else{
+                            console.log("no match");
+                        }
+                        
                     }
                 }
                 break;
@@ -1205,6 +1274,12 @@ $(document).ready(function(){
     
     $("#dialog-sender .add_zero").on('click',function(){        
         adjustCanMessage();
+    });
+    $("#dialog-sender .sender_final").on('click',function(){ 
+        var dlcInputSender = $("#dialog-sender .candlc_sender").val().trim();
+        var idInputSender = $("#dialog-sender .canid_sender").val().trim();
+        var dataInputSender = $("#dialog-sender .candata_sender").val().trim();
+        sendSignal("002400806d68d7551407f09b861e3aad000549a844"+dlcInputSender+"0000"+idInputSender+dataInputSender);
     });
     
     function addZeroBefore(n, width, z) {
@@ -1669,109 +1744,25 @@ $(document).ready(function(){
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////// CALIBRATION //////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    
-    var joystickLongSubindex;
-    var joystickLatSubindex;
-    
-    calibrateBt1.find("button").on('click', function(){
+   
+   
+    function startCalibrate(subindexX, subindexY, id){
         _MODE = "CALIBRATION";
-        joystickLongSubindex = "01";
-        joystickLatSubindex = "02";
-        calibrateBt1.find(".calibrate_tool").removeClass("hidden");
-        calibrateZeroLong("1");
-        $(this).addClass("hidden");
-    });    
-    calibrateBt2.find("button").on('click', function(){
-        _MODE = "CALIBRATION";
-        joystickLongSubindex = "03";
-        joystickLatSubindex = "04";
-        calibrateBt2.find(".calibrate_tool").removeClass("hidden");
-        calibrateZeroLong("2");
-        $(this).addClass("hidden");
-    });    
-    calibrateBt3.find("button").on('click', function(){
-        _MODE = "CALIBRATION";
-        joystickLongSubindex = "05";
-        joystickLatSubindex = "06";
-        calibrateBt3.find(".calibrate_tool").removeClass("hidden");
-        calibrateZeroLong("3");
-        $(this).addClass("hidden");
-    });  
-    
-    $(".verify_calibration").on('click', function(){
-        _MODE = "CALIBRATION";
-        if($(this).hasClass("joystick1")){
-            console.log("on lance la verif joystick1 !!!");
-            var indexVerif = 0;
-            var intervalVerify = setInterval(function(){
-                verifyCalibration("joystick1");
-                indexVerif++;
-                indexVerifGlobal++;
-                if(indexVerif > 30){                    
-                    clearInterval(intervalVerify);
-                    indexVerif = 0;
-                    console.log("stop interval");
-                }
-            },300);
-        }
-        if($(this).hasClass("joystick2")){
-            var indexVerif2 = 0;
-            var intervalVerify = setInterval(function(){
-                verifyCalibration("joystick2");
-                indexVerif2++;
-                if(indexVerif2 > 30){
-                    clearInterval(intervalVerify);
-                    console.log("stop interval");
-                }
-            },500);
-        }
-        if($(this).hasClass("joystick3")){
-            var indexVerif3 = 0;
-            var intervalVerify = setInterval(function(){
-                verifyCalibration("joystick3");
-                indexVerif3++;
-                if(indexVerif3 > 30){
-                    clearInterval(intervalVerify);
-                    console.log("stop interval");
-                }
-            },600);
+        calibrateContainer.find(".id"+id+" .calibrate_tool").removeClass("hidden");
+        if(subindexX !== "null"){
+            calibrateZeroLong(subindexX, subindexY, id);
+        }else{
+            calibrateZeroLat(subindexX, subindexY, id);
         }
         
-    });    
+    }
     
-    $(".reset_calibration_verif").on('click', function(){
-        _MODE = "CALIBRATION";
-        if($(this).hasClass("joystick1")){
-            resetCalibrationVerif("joystick1");
-        }
-        if($(this).hasClass("joystick2")){
-            resetCalibrationVerif("joystick2");
-        }
-        if($(this).hasClass("joystick3")){
-            resetCalibrationVerif("joystick3");
-        }
-        
-    });    
     
     var Cal_merde = "002400806d68d7551407f09b861e3aad000549a844";
     var Cal_dlc = "080000";
     var Cal_data   = "401f540200000000";
     var Cal_data_pre = "401f54";
     var Cal_completion = "00000000";
-    
-    var Cal_dataX1 = "401f540100000000";
-    var Cal_dataY1 = "401f540200000000";
-    var Cal_dataX2 = "401f540300000000";
-    var Cal_dataY2 = "401f540400000000";
-    var Cal_dataX3 = "401f540500000000";
-    var Cal_dataY3 = "401f540600000000";
-    
-    var Cal_dataX1Final = "4001650100000000";
-    var Cal_dataY1Final = "4001650200000000";
-    var Cal_dataX2Final = "4001650300000000";
-    var Cal_dataY2Final = "4001650400000000";
-    var Cal_dataX3Final = "4001650500000000";
-    var Cal_dataY3Final = "4001650600000000";
     
      $(".eprom_protect .bt_eprom").on('click', function(){
         if($(".eprom_protect").hasClass("protected")){
@@ -1792,23 +1783,6 @@ $(document).ready(function(){
     });
     
     var axisRawSignal = Cal_merde+Cal_dlc+cobID2+Cal_data;
-    
-    var axisRawSignalX = Cal_merde+Cal_dlc+cobID2+Cal_data_pre+joystickLongSubindex+Cal_completion;
-    var axisRawSignalY = Cal_merde+Cal_dlc+cobID2+Cal_data_pre+joystickLatSubindex+Cal_completion;
-    
-    var axisRawSignalX1 = Cal_merde+Cal_dlc+cobID2+Cal_dataX1;
-    var axisRawSignalY1 = Cal_merde+Cal_dlc+cobID2+Cal_dataY1;
-    var axisRawSignalX2 = Cal_merde+Cal_dlc+cobID2+Cal_dataX2;
-    var axisRawSignalY2 = Cal_merde+Cal_dlc+cobID2+Cal_dataY2;
-    var axisRawSignalX3 = Cal_merde+Cal_dlc+cobID2+Cal_dataX3;
-    var axisRawSignalY3 = Cal_merde+Cal_dlc+cobID2+Cal_dataY3;
-    
-    var axisRawSignalX1Final = Cal_merde+Cal_dlc+cobID2+Cal_dataX1Final;
-    var axisRawSignalY1Final = Cal_merde+Cal_dlc+cobID2+Cal_dataY1Final;
-    var axisRawSignalX2Final = Cal_merde+Cal_dlc+cobID2+Cal_dataX2Final;
-    var axisRawSignalY2Final = Cal_merde+Cal_dlc+cobID2+Cal_dataY2Final;
-    var axisRawSignalX3Final = Cal_merde+Cal_dlc+cobID2+Cal_dataX3Final;
-    var axisRawSignalY3Final = Cal_merde+Cal_dlc+cobID2+Cal_dataY3Final;
     
     var axisRawZeroLong;
     var axisRawZeroLat;
@@ -1835,149 +1809,110 @@ $(document).ready(function(){
     }
     
     //Recuperation de la position Longitudinale et stockage dans l'EPROM
-    function calibrateZeroLong(identifier){
-        console.log(axisRawSignalX+" // "+axisRawSignalY);
-        $(".calibrate_bt_"+identifier).find(".status_calib").html("Set ZERO position");
-        $(".calibrate_bt_"+identifier).find(".action_calib").html("<img src='images/zero_arrow.png'>");
-        $(".calibrate_bt_"+identifier).find(".validate_calib").on('click', function(){
-            //alert("length = "+axisRawSignal.length+" ..send signal acquisition ZERO : "+axisRawSignal);
-            if(identifier == "1"){
-                sendSignal(axisRawSignalX1);
-            }
-            if(identifier == "2"){
-                sendSignal(axisRawSignalX2);
-            }
-            if(identifier == "3"){
-                sendSignal(axisRawSignalX3);
-            }
+    function calibrateZeroLong(subindexX, subindexY, identifier){
+        $(".bloc_calibrate.id"+identifier).find(".status_calib").html("Set ZERO position");
+        $(".bloc_calibrate.id"+identifier).find(".action_calib").html("<img src='images/zero_arrow.png'>");
+        $(".bloc_calibrate.id"+identifier).find(".validate_calib").on('click', function(){
+            var axisRawSignalX = Cal_merde+Cal_dlc+cobID2+Cal_data_pre+subindexX+Cal_completion;            
+            sendSignal(axisRawSignalX);
             
             waitCalibResponse = cobID1;
             
             setTimeout(function(){
                 axisRawZeroLong = finalResponseData;
-                var newSignal = signalComposer(axisRawZeroLong, "2054", joystickLongSubindex); //param = response + header for zero long                
+                var newSignal = signalComposer(axisRawZeroLong, "2054", subindexX); //param = response + header for zero long                
                 sendSignal(newSignal);
-                calibrateMaxLong(identifier);
+                calibrateMaxLong(subindexX, subindexY, identifier);
             },200);
         });
     }
-    function calibrateMaxLong(identifier){
-        $(".calibrate_bt_"+identifier).find(".validate_calib").off();
-        $(".calibrate_bt_"+identifier).find(".status_calib").html("Set RIGHT position max");
-        $(".calibrate_bt_"+identifier).find(".action_calib").html("<img src='images/right_arrow.png'>");
-        $(".calibrate_bt_"+identifier).find(".validate_calib").on('click', function(){
-            //alert("length = "+axisRawSignal.length+" ..send signal acquisition axis raw MAX : "+axisRawSignal);  
-            if(identifier == "1"){
-                sendSignal(axisRawSignalX1);
-            }
-            if(identifier == "2"){
-                sendSignal(axisRawSignalX2);
-            }
-            if(identifier == "3"){
-                sendSignal(axisRawSignalX3);
-            }
+    function calibrateMaxLong(subindexX, subindexY, identifier){
+        $(".bloc_calibrate.id"+identifier).find(".validate_calib").off();
+        $(".bloc_calibrate.id"+identifier).find(".status_calib").html("Set RIGHT position max");
+        $(".bloc_calibrate.id"+identifier).find(".action_calib").html("<img src='images/right_arrow.png'>");
+        $(".bloc_calibrate.id"+identifier).find(".validate_calib").on('click', function(){
+            var axisRawSignalX = Cal_merde+Cal_dlc+cobID2+Cal_data_pre+subindexX+Cal_completion; 
+            
+            sendSignal(axisRawSignalX);
             waitCalibResponse = cobID1;
             setTimeout(function(){
                 axisRawMaxLong = finalResponseData;
-                var newSignal = signalComposer(axisRawMaxLong, "2254", joystickLongSubindex); //param = response + header for max long
+                var newSignal = signalComposer(axisRawMaxLong, "2254", subindexX); //param = response + header for max long
                 sendSignal(newSignal);
-                calibrateMinLong(identifier);
+                calibrateMinLong(subindexX, subindexY, identifier);
             },200);
         });
     }
-    function calibrateMinLong(identifier){
-        $(".calibrate_bt_"+identifier).find(".validate_calib").off();
-        $(".calibrate_bt_"+identifier).find(".status_calib").html("Set LEFT position max");
-        $(".calibrate_bt_"+identifier).find(".action_calib").html("<img src='images/left_arrow.png'>");
-        $(".calibrate_bt_"+identifier).find(".validate_calib").on('click', function(){
-            //alert("length = "+axisRawSignal.length+" ..send signal acquisition axis raw MIN : "+axisRawSignal);  
-            if(identifier == "1"){
-                sendSignal(axisRawSignalX1);
-            }
-            if(identifier == "2"){
-                sendSignal(axisRawSignalX2);
-            }
-            if(identifier == "3"){
-                sendSignal(axisRawSignalX3);
-            }
+    function calibrateMinLong(subindexX, subindexY, identifier){
+        $(".bloc_calibrate.id"+identifier).find(".validate_calib").off();
+        $(".bloc_calibrate.id"+identifier).find(".status_calib").html("Set LEFT position max");
+        $(".bloc_calibrate.id"+identifier).find(".action_calib").html("<img src='images/left_arrow.png'>");
+        $(".bloc_calibrate.id"+identifier).find(".validate_calib").on('click', function(){
+            var axisRawSignalX = Cal_merde+Cal_dlc+cobID2+Cal_data_pre+subindexX+Cal_completion;             
+            sendSignal(axisRawSignalX);
+            
             waitCalibResponse = cobID1;
             setTimeout(function(){
                 axisRawMinLong = finalResponseData;
-                var newSignal = signalComposer(axisRawMinLong, "2154", joystickLongSubindex); //param = response + header for min long
+                var newSignal = signalComposer(axisRawMinLong, "2154", subindexX); //param = response + header for min long
                 sendSignal(newSignal);
-                calibrateMinLat(identifier);
+                if(subindexY !== "null"){
+                     calibrateMinLat(subindexX, subindexY, identifier);
+                }else{
+                    resetCalibration(identifier);
+                }
+               
             },200);
         });
     }
     
     //Recuperation de la position Verticale et stockage dans l'EPROM
-    function calibrateMinLat(identifier){
-        $(".calibrate_bt_"+identifier).find(".validate_calib").off();
-        $(".calibrate_bt_"+identifier).find(".status_calib").html("Set BOTTOM position max");
-        $(".calibrate_bt_"+identifier).find(".action_calib").html("<img src='images/down_arrow.png'>");
-        $(".calibrate_bt_"+identifier).find(".validate_calib").on('click', function(){
-            //alert("length = "+axisRawSignal.length+" ..send signal acquisition axis raw MIN : "+axisRawSignal);  
-            if(identifier == "1"){
-                sendSignal(axisRawSignalY1);
-            }
-            if(identifier == "2"){
-                sendSignal(axisRawSignalY2);
-            }
-            if(identifier == "3"){
-                sendSignal(axisRawSignalY3);
-            }
+    function calibrateMinLat(subindexX, subindexY, identifier){
+        $(".bloc_calibrate.id"+identifier).find(".validate_calib").off();
+        $(".bloc_calibrate.id"+identifier).find(".status_calib").html("Set BOTTOM position max");
+        $(".bloc_calibrate.id"+identifier).find(".action_calib").html("<img src='images/down_arrow.png'>");
+        $(".bloc_calibrate.id"+identifier).find(".validate_calib").on('click', function(){
+            var axisRawSignalY = Cal_merde+Cal_dlc+cobID2+Cal_data_pre+subindexY+Cal_completion;             
+            sendSignal(axisRawSignalY);
+            
             waitCalibResponse = cobID1;
             setTimeout(function(){
                 axisRawMinLat = finalResponseData;
-                var newSignal = signalComposer(axisRawMinLat, "2154", joystickLatSubindex); //param = response + header for zero long
+                var newSignal = signalComposer(axisRawMinLat, "2154", subindexY); //param = response + header for zero long
                 sendSignal(newSignal);
-                calibrateMaxLat(identifier);
+                calibrateMaxLat(subindexX, subindexY, identifier);
             },200);
         });
     }
-    function calibrateMaxLat(identifier){
-        $(".calibrate_bt_"+identifier).find(".validate_calib").off();
-        $(".calibrate_bt_"+identifier).find(".status_calib").html("Set TOP position max");
-        $(".calibrate_bt_"+identifier).find(".action_calib").html("<img src='images/top_arrow.png'>");
-        $(".calibrate_bt_"+identifier).find(".validate_calib").on('click', function(){
-            //alert("length = "+axisRawSignal.length+" ..send signal acquisition axis raw MIN : "+axisRawSignal);  
-            if(identifier == "1"){
-                sendSignal(axisRawSignalY1);
-            }
-            if(identifier == "2"){
-                sendSignal(axisRawSignalY2);
-            }
-            if(identifier == "3"){
-                sendSignal(axisRawSignalY3);
-            }
+    function calibrateMaxLat(subindexX, subindexY, identifier){
+        $(".bloc_calibrate.id"+identifier).find(".validate_calib").off();
+        $(".bloc_calibrate.id"+identifier).find(".status_calib").html("Set TOP position max");
+        $(".bloc_calibrate.id"+identifier).find(".action_calib").html("<img src='images/top_arrow.png'>");
+        $(".bloc_calibrate.id"+identifier).find(".validate_calib").on('click', function(){
+            var axisRawSignalY = Cal_merde+Cal_dlc+cobID2+Cal_data_pre+subindexY+Cal_completion;             
+            sendSignal(axisRawSignalY);
+            
             waitCalibResponse = cobID1;
             setTimeout(function(){
                 axisRawMaxLat = finalResponseData;
-                var newSignal = signalComposer(axisRawMaxLat, "2254", joystickLatSubindex); //param = response + header for zero long
+                var newSignal = signalComposer(axisRawMaxLat, "2254", subindexY); //param = response + header for zero long
                 sendSignal(newSignal);
-                calibrateZeroLat(identifier);
+                calibrateZeroLat(subindexX, subindexY, identifier);
             },200);
         });
     }
-    function calibrateZeroLat(identifier){
-        $(".calibrate_bt_"+identifier).find(".validate_calib").off();
-        $(".calibrate_bt_"+identifier).find(".status_calib").html("Set ZERO position");
-        $(".calibrate_bt_"+identifier).find(".action_calib").html("<img src='images/zero_arrow.png'>");
-        $(".calibrate_bt_"+identifier).find(".validate_calib").on('click', function(){
-            //alert("length = "+axisRawSignal.length+" ..send signal acquisition axis raw MIN : "+axisRawSignal);  
-            if(identifier == "1"){
-                sendSignal(axisRawSignalY1);
-            }
-            if(identifier == "2"){
-                sendSignal(axisRawSignalY2);
-            }
-            if(identifier == "3"){
-                sendSignal(axisRawSignalY3);
-            }
+    function calibrateZeroLat(subindexX, subindexY, identifier){
+        $(".bloc_calibrate.id"+identifier).find(".validate_calib").off();
+        $(".bloc_calibrate.id"+identifier).find(".status_calib").html("Set ZERO position");
+        $(".bloc_calibrate.id"+identifier).find(".action_calib").html("<img src='images/zero_arrow.png'>");
+        $(".bloc_calibrate.id"+identifier).find(".validate_calib").on('click', function(){
+           var axisRawSignalY = Cal_merde+Cal_dlc+cobID2+Cal_data_pre+subindexY+Cal_completion;             
+            sendSignal(axisRawSignalY);
+            
             waitCalibResponse = cobID1;
             setTimeout(function(){
                 axisRawZeroLat = finalResponseData;
-                var newSignal = signalComposer(axisRawZeroLat, "2054", joystickLatSubindex); //param = response + header for zero long
+                var newSignal = signalComposer(axisRawZeroLat, "2054", subindexY); //param = response + header for zero long
                 sendSignal(newSignal);
                 resetCalibration(identifier);
             },200);
@@ -1985,29 +1920,92 @@ $(document).ready(function(){
     }
     
     function resetCalibration(identifier){
-        $(".calibrate_bt_"+identifier).find(".validate_calib").off();
-        $(".calibrate_bt_"+identifier).find(".status_calib").html("Joystick "+identifier+ " is calibrated");
-        $(".calibrate_bt_"+identifier).find(".action_calib").html("");
-        $(".calibrate_bt_"+identifier).find(".validate_calib").on('click', function(){
-            switch(identifier){
-                case "1":
-                    calibrateBt1.find(".calibrate_tool").addClass("hidden");
-                    calibrateBt1.find("button").removeClass("hidden");
-                    $(".calibrate_bt_"+identifier).find(".validate_calib").off();
-                    break;
-                case "2":
-                    calibrateBt2.find(".calibrate_tool").addClass("hidden");
-                    calibrateBt2.find("button").removeClass("hidden");
-                    $(".calibrate_bt_"+identifier).find(".validate_calib").off();
-                    break;
-                case "3":
-                    calibrateBt3.find(".calibrate_tool").addClass("hidden");
-                    calibrateBt3.find("button").removeClass("hidden");
-                    $(".calibrate_bt_"+identifier).find(".validate_calib").off();
-                    break;
-            }
+        
+        $(".bloc_calibrate.id"+identifier).find(".validate_calib").off();
+        $(".bloc_calibrate.id"+identifier).find(".status_calib").html("Joystick "+identifier+ " is calibrated");
+        $(".bloc_calibrate.id"+identifier).find(".action_calib").html("");
+        $(".bloc_calibrate.id"+identifier).find(".validate_calib").on('click', function(){            
+            $(".bloc_calibrate.id"+identifier).find(".calibrate_tool").addClass("hidden");
+            $(".bloc_calibrate.id"+identifier).find("button").removeClass("hidden");
+            $(".bloc_calibrate.id"+identifier).find(".validate_calib").off();                  
         });
+    };
+    
+    
+    ////////////////////////////////////////////////////////////////////////////
+    //////////////////////VERIFY CALIBRATION////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////
+    
+    function startVerifyCalibration(subindexX, subindexY, identifier){
+        currentIdentifier = identifier;
+        alert("start with "+currentIdentifier);
+        currentSubindexX = subindexX;
+        currentSubindexY = subindexY;
+        
+        _MODE = "CALIBRATION_VERIFY";        
+        clearInterval(intervalVerify);
+        intervalVerify = setInterval(function(){
+             pingGetAxisValue(subindexX, subindexY, identifier);
+        },200);
+    };    
+    function stopVerifyCalibration(){
+        clearInterval(intervalVerify);
+        _MODE = "CALIBRATION";
     }
+    
+    function updateVerifyData(verifyVal, axis, currentIdentifier){
+        var xValMin = joystickVerifyContainer.find(".id"+currentIdentifier+" .minx_value_joy").html();    
+        var xValMax = joystickVerifyContainer.find(".id"+currentIdentifier+" .maxx_value_joy").html();    
+        var yValMin = joystickVerifyContainer.find(".id"+currentIdentifier+" .miny_value_joy").html();    
+        var yValMax = joystickVerifyContainer.find(".id"+currentIdentifier+" .maxy_value_joy").html();  
+        
+        if(axis == "x"){
+//            var part1 = convertHexa(verifyVal.substring(0,2));
+//            var part2 = convertHexa(verifyVal.substring(2,4));
+//            var valueFinal = part2+part1;
+              var valueFinal = convertHexa(verifyVal);
+            
+            joystickVerifyContainer.find(".id"+currentIdentifier+" .x_value_joy").html(valueFinal);
+            if(parseInt(xValMin) > parseInt(valueFinal)){                
+                joystickVerifyContainer.find(".id"+currentIdentifier+" .minx_value_joy").html(valueFinal);
+            }
+            if(parseInt(xValMax) < parseInt(valueFinal)){                
+                joystickVerifyContainer.find(".id"+currentIdentifier+" .maxx_value_joy").html(valueFinal);
+            }
+            
+            
+            
+                
+        }
+        if(axis == "y"){
+//            var part1 = convertHexa(verifyVal.substring(0,2));
+//            var part2 = convertHexa(verifyVal.substring(2,4));
+//            var valueFinal = part2+part1;
+            var valueFinal = convertHexa(verifyVal);
+            
+            joystickVerifyContainer.find(".id"+currentIdentifier+" .y_value_joy").html(valueFinal);
+            if(parseInt(yValMin) > parseInt(valueFinal)){                
+                joystickVerifyContainer.find(".id"+currentIdentifier+" .miny_value_joy").html(valueFinal);
+            }
+            if(parseInt(yValMax) < parseInt(valueFinal)){                
+                joystickVerifyContainer.find(".id"+currentIdentifier+" .maxy_value_joy").html(valueFinal);
+            }
+        }
+    }
+    
+    $(".reset_calibration_verif").on('click', function(){
+        _MODE = "CALIBRATION";
+        if($(this).hasClass("joystick1")){
+            resetCalibrationVerif("joystick1");
+        }
+        if($(this).hasClass("joystick2")){
+            resetCalibrationVerif("joystick2");
+        }
+        if($(this).hasClass("joystick3")){
+            resetCalibrationVerif("joystick3");
+        }
+        
+    });    
     
     function resetCalibrationVerif(joystick){
         console.log("index verif global" +indexVerifGlobal);
@@ -2019,154 +2017,18 @@ $(document).ready(function(){
                 joystick1Val.find(".minx_value_joy").html(0);
                 joystick1Val.find(".maxy_value_joy").html(0);
                 joystick1Val.find(".miny_value_joy").html(0);
-                break;
-            case "joystick2":
-                joystick2Val.find(".x_value_joy").html(0);
-                joystick2Val.find(".y_value_joy").html(0);
-                joystick2Val.find(".maxx_value_joy").html(0);
-                joystick2Val.find(".minx_value_joy").html(0);
-                joystick2Val.find(".maxy_value_joy").html(0);
-                joystick2Val.find(".miny_value_joy").html(0);
-                break;
-            case "joystick3":
-                joystick3Val.find(".x_value_joy").html(0);
-                joystick3Val.find(".y_value_joy").html(0);
-                joystick3Val.find(".maxx_value_joy").html(0);
-                joystick3Val.find(".minx_value_joy").html(0);
-                joystick3Val.find(".maxy_value_joy").html(0);
-                joystick3Val.find(".miny_value_joy").html(0);
-                break;
+                break;            
         }
     }
-    
-    function verifyCalibration(joystick){
-        pingGetAxisValue(joystick);
-        setTimeout(function(){
-//            console.log("index verif global" +indexVerifGlobal);
-//            switch(joystick){
-//                case "joystick1":
-                    joy1currX.html(axisRawValueX1);
-                    joy1currY.html(axisRawValueY1);
-                    if(axisRawValueX1 > parseInt(joy1maxX.html())){
-                        joy1maxX.html(axisRawValueX1);
-                    }
-                    if(axisRawValueX1 < parseInt(joy1minX.html())){
-                        joy1minX.html(axisRawValueX1);
-                    }
-                    if(axisRawValueY1 > parseInt(joy1maxY.html())){
-                        joy1maxY.html(axisRawValueY1);
-                    }
-                    if(axisRawValueY1 < parseInt(joy1minY.html())){
-                        joy1minY.html(axisRawValueY1);
-                    }
-//                    break;
-//                case "joystick2":
-//                    joystick2Val.find(".x_value_joy").html(axisRawValueX2);
-//                    joystick2Val.find(".y_value_joy").html(axisRawValueY2);
-//                    if(axisRawValueX2 > parseInt(joystick2Val.find(".maxx_value_joy").html())){
-//                        joystick2Val.find(".maxx_value_joy").html(axisRawValueX2);
-//                    }
-//                    if(axisRawValueX2 < parseInt(joystick2Val.find(".minx_value_joy").html())){
-//                        joystick2Val.find(".minx_value_joy").html(axisRawValueX2);
-//                    }
-//                    if(axisRawValueY2 > parseInt(joystick2Val.find(".maxy_value_joy").html())){
-//                        joystick2Val.find(".maxy_value_joy").html(axisRawValueY2);
-//                    }
-//                    if(axisRawValueY2 < parseInt(joystick2Val.find(".miny_value_joy").html())){
-//                        joystick2Val.find(".miny_value_joy").html(axisRawValueY2);
-//                    }
-//                    break;
-//                case "joystick3":
-//                    joystick3Val.find(".x_value_joy").html(axisRawValueX3);
-//                    joystick3Val.find(".y_value_joy").html(axisRawValueY3);
-//                    if(axisRawValueX3 > parseInt(joystick3Val.find(".maxx_value_joy").html())){
-//                        joystick3Val.find(".maxx_value_joy").html(axisRawValueX3);
-//                    }
-//                    if(axisRawValueX3 < parseInt(joystick3Val.find(".minx_value_joy").html())){
-//                        joystick3Val.find(".minx_value_joy").html(axisRawValueX3);
-//                    }
-//                    if(axisRawValueY3 > parseInt(joystick3Val.find(".maxy_value_joy").html())){
-//                        joystick3Val.find(".maxy_value_joy").html(axisRawValueY1);
-//                    }
-//                    if(axisRawValueY3 < parseInt(joystick3Val.find(".miny_value_joy").html())){
-//                        joystick3Val.find(".miny_value_joy").html(axisRawValueY1);
-//                    }
-//                    break;
-//            }
-        },250);
-    };         
-    
-    function pingGetAxisValue(joystick){
         
-//        switch(joystick){
-//            case "joystick1":   
-                pingVal(axisRawSignalX1Final);                
-                setTimeout(function(){
-                    axisRawValueX1 = finalResponseData;  
-                    var part1resp = axisRawValueX1.substring(0,2);
-                    axisRawValueX1 = part1resp;  
-                    axisRawValueX1 = convertHexa(axisRawValueX1);                    
-                    
-                    setTimeout(function(){
-                        pingVal(axisRawSignalY1Final);
-                        setTimeout(function(){
-                            axisRawValueY1 = finalResponseData; 
-                            var part1resp = axisRawValueY1.substring(0,2);
-                            axisRawValueY1 = part1resp;  
-                            axisRawValueY1 = convertHexa(axisRawValueY1);
-                        },60);
-                    },50);
-                },40);     
-//            break;
-//            case "joystick2":   
-//                pingVal(axisRawSignalX2);                
-//                setTimeout(function(){
-//                    axisRawValueX2 = finalResponseData;  
-//                    var part1resp = axisRawValueX2.substring(0,2);
-//                    var part2resp = axisRawValueX2.substring(2,4);
-//                    axisRawValueX2 = part2resp+part1resp;  
-//                    axisRawValueX2 = convertHexa2(axisRawValueX2);
-//                    
-//                    pingVal(axisRawSignalY2);
-//                    setTimeout(function(){
-//                        axisRawValueY2 = finalResponseData; 
-//                        var part1resp = axisRawValueY1.substring(0,2);
-//                        var part2resp = axisRawValueY1.substring(2,4);
-//                        axisRawValueY2 = part2resp+part1resp;  
-//                        axisRawValueY2 = convertHexa2(axisRawValueY2);
-//                    },150);
-//                },150);     
-//            break;
-//            case "joystick3":   
-//                pingVal(axisRawSignalX3);                
-//                setTimeout(function(){
-//                    axisRawValueX3 = finalResponseData;  
-//                    var part1resp = axisRawValueX3.substring(0,2);
-//                    var part2resp = axisRawValueX3.substring(2,4);
-//                    axisRawValueX3 = part2resp+part1resp;  
-//                    axisRawValueX3 = convertHexa2(axisRawValueX3);
-//                    
-//                    pingVal(axisRawSignalY3);
-//                    setTimeout(function(){
-//                        axisRawValueY3 = finalResponseData; 
-//                        var part1resp = axisRawValueY3.substring(0,2);
-//                        var part2resp = axisRawValueY3.substring(2,4);
-//                        axisRawValueY3 = part2resp+part1resp;  
-//                        axisRawValueY3 = convertHexa2(axisRawValueY3);
-//                    },150);
-//                },150);     
-//            break;
-//        }        
+    function pingGetAxisValue(subindexX, subindexY, identifier){
+            var axisRawVerifSignalX = Cal_merde+Cal_dlc+cobID2+"400165"+subindexX+"00000000";    
+            var axisRawVerifSignalY = Cal_merde+Cal_dlc+cobID2+"400165"+subindexY+"00000000";    
+            
+            sendSignal(axisRawVerifSignalX);  
+            sendSignal(axisRawVerifSignalY);  
+
     }
-    
-    function pingVal(signal){
-        sendSignal(signal);
-        waitCalibResponse = cobID1;  
-    }
-    
-    
-    
-    
     
     
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
