@@ -193,12 +193,15 @@ $(document).ready(function(){
                         $(".serial_number").html(serialNumber);                    
                         $("#content_home .information").removeClass("hidden");
                         $("#content_home .information_diag").removeClass("hidden");
+                        $("#content_home .commentary_bloc").removeClass("hidden");
+                        
                         $(".head_userinfo").removeClass("hidden");
                         $(".head_userinfo .info .role_user").html("Repair");
                         $(".popup_test_fw .bt_no").addClass(sectionRepair);
                         $(".popup_test_fw .bt_yes").addClass(sectionRepair);
                         
                         getInfoCard(globalName, cobID2);
+                        checkSN(serialNumber);
                     }    
                     //Recupération du dictionnaire correspondant + remplissage du tableau diagnostique
                     $.ajax({
@@ -315,12 +318,14 @@ $(document).ready(function(){
                         $(".serial_number").html(serialNumber);                    
                         $("#content_home .information").removeClass("hidden");
                         $("#content_home .information_finaltest").removeClass("hidden");
+                        $("#content_home .commentary_bloc").removeClass("hidden");
                         $(".head_userinfo").removeClass("hidden");
                         $(".head_userinfo .info .role_user").html("Repair");
                         $(".popup_test_fw .bt_no").addClass(sectionRepair);
                         $(".popup_test_fw .bt_yes").addClass(sectionRepair);
                         
                         getInfoCard(globalName, cobID2);
+                        checkSN(serialNumber);
                     }    
                     //Recupération du dictionnaire correspondant + remplissage du tableau diagnostique
                     $.ajax({
@@ -1207,8 +1212,64 @@ $(document).ready(function(){
     };
     
       
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////// SERIAL NUMBER OPERATIONS /////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     
+    $(".update_commentary_bt").on('click', function(){
+        if (confirm('Do you want to update commentary for this SN ?')) {
+            updateCommentary(serialNumber);
+        } else {
+            //
+        }        
+    });
     
+    function checkSN(serialNumber){
+        $.ajax({
+            url : 'php/api.php?function=get_sn&param1='+serialNumber,
+            type : 'GET',
+            dataType : 'JSON',
+            success: function(data, statut){
+                if(data.length == 0){
+                    if (confirm('SN doesnt exist. Do you want to add it in database ?')) {
+                        console.log("add "+serialNumber+" in database..")
+                        addSN(serialNumber);
+                    } else {
+                        console.log("do nothing..")
+                    }
+                }else{
+                    $(".input_commentary").val(data[0].commentary);
+                    if (confirm('SN already exist. Do you want to check his log history ?')) {                        
+                        searchLogField("", serialNumber, "")
+                    } else {
+                        // Do nothing!
+                    }
+                }  
+            }
+        });
+    }
+    function addSN(serialNumber){
+        $.ajax({
+            url : 'php/api.php?function=add_sn&param1='+serialNumber,
+            type : 'GET',
+            dataType : 'JSON',
+            success: function(data, statut){
+                console.log("SN AJouté");
+            }
+        });
+    }
+    function updateCommentary(serialNumber){
+        var commentaryStr = $(".input_commentary").val();
+        $.ajax({
+            url : 'php/api.php?function=update_sn&param1='+serialNumber,
+            type : 'POST',
+            dataType : 'JSON',
+            data: {commentary:commentaryStr},
+            success: function(data, statut){
+                alert("Your commentary on SN "+serialNumber+ " has been updated.");
+            }
+        });
+    }
     
     
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2226,7 +2287,6 @@ $(document).ready(function(){
         startDownload(cobID2);
         //sendSignal(Cal_post+Cal_dlc+Cal_canid+"2f511f0100000000");
     });
-    
     $(".testing_upl .stop_download").on('click', function(){
         stopDownload(cobID2);
     });
@@ -2449,8 +2509,6 @@ $(document).ready(function(){
      $(".history_bt_search_page").on('click', function(){
          searchLogPage();
      });
-     
-     
      $(".header_history_table span").on('click', function(){
         if($(this).hasClass("selected")){
             $(".header_history_table span").removeClass('selected');
@@ -2558,6 +2616,45 @@ $(document).ready(function(){
                     if(data.length == 0){
                         alert("No result found with this part number.")
                     }else{
+                        activeSearchHistoryResult = data;                        
+                        generateHistoryResult();
+                    }   
+                }
+            });  
+         }
+     }
+     
+     function searchLogField(pn, sn, sso){
+         var historyPNVal = pn.trim();
+         var historySNVal = sn.trim();
+         var historySSOVal = sso.trim();
+         
+         if(pn != ""){
+             $(".history_pn_input_page").val(historyPNVal);
+         }
+         if(sn != ""){
+             $(".history_sn_input_page").val(historySNVal);
+         }
+         if(sso != ""){
+             $(".history_sso_input_page").val(historySSOVal);
+         }
+         
+         if(historyPNVal == "" && historySNVal == "" && historySSOVal == ""){
+            alert("Fields are empties or not correct.");
+         }else{             
+             $.ajax({
+                //get global log with param1 = PN, param2 = SN, param3 = userSSO, param4= date
+                url : 'php/api.php?function=get_global_log&param1='+historyPNVal+'&param2='+historySNVal+'&param3='+historySSOVal+'&param4',
+                type : 'GET',
+                dataType : 'JSON',
+                success: function(data, statut){
+                    if(data.length == 0){
+                        alert("No result found.")
+                    }else{
+                        $(".page_content.active").removeClass("active");
+                        setTimeout(function(){
+                            $(document).find("#content_history").addClass("active");
+                        },100);
                         activeSearchHistoryResult = data;                        
                         generateHistoryResult();
                     }   
@@ -2719,7 +2816,6 @@ $(document).ready(function(){
         myWindow.print();
         myWindow.close();
     };
-    
     
     function sortBy(field, reverse, primer){
         var key = primer ? 

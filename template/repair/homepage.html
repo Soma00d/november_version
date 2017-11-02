@@ -46,7 +46,7 @@
                 </span><br>
                 Serial Number: 
                 <span class="input_zone blue">
-                    <input id="serial_number_inpu_finaltest" class="inp3" type="text" value="" placeholder="Serial Number"/>
+                    <input id="serial_number_input_finaltest" class="inp3" type="text" value="" placeholder="Serial Number"/>
                 </span><br>
                 Manufacturing Date: 
                 <span class="input_zone blue">
@@ -73,14 +73,20 @@
             </div>
         </div>
         
-        <div class="bloc information_finaltest hidden">
-            <div class="bouton test_bt_home" data-link="testfwdownloadfinal">
-                <img class="circle" src="images/circle_calib.png"><span class="text">Continue</span>
+        <div class="bloc commentary_bloc hidden">
+            <div class="title_bloc">Commentary on SN <span class="serial_number"></span></div>
+            <textarea class="input_commentary"></textarea>
+            <div class="update_commentary_bt">Update Commentary</div>
+        </div>
+        
+        <div class="information_finaltest hidden">
+            <div class="bouton test_bt_home" data-link="testfwdownload">
+                Continue
             </div>
         </div>
-        <div class="bloc information_diag hidden">
+        <div class="information_diag hidden">
             <div class="bouton test_bt_home" data-link="testfwdownload">
-                <img class="circle" src="images/circle_calib.png"><span class="text">Continue</span>
+                Continue
             </div>
         </div>
         
@@ -94,4 +100,6 @@
         
         
     </div>
+    
+    
 </div>

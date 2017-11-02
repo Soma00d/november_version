@@ -127,6 +127,35 @@ $getGlobalLog = function ($param1, $param2, $param3, $param4, $connexion){
     
     return json_encode($result);
 };
+
+//check if SN exist in database
+$getSN = function ($serialNumber, $connexion){    
+    $resultats=$connexion->query("SELECT * FROM log_sn WHERE serial_number = '$serialNumber' ");      
+    $resultats->execute();
+    $result = $resultats->fetchAll();
+    return json_encode($result);
+};
+
+//add new SN in database
+$addSN = function ($serialNumber, $connexion){  
+    
+    $stmt = $connexion->prepare("INSERT INTO log_sn (serial_number, date) VALUES (:serialnumber, NOW())");    
+    $stmt->bindParam(':serialnumber', $serialNumber);    
+    $stmt->execute();
+    
+};
+
+//update SN in database
+$updateSN = function ($serialNumber, $connexion){  
+    $serialNumber = $serialNumber;
+    $commentary = $_POST['commentary'];
+    
+    $sql = "UPDATE log_sn SET commentary = '$commentary', date_commentary = NOW() WHERE serial_number = '$serialNumber'";
+    $stmt = $connexion->prepare($sql);                                  
+    
+    $stmt->execute();
+    
+};
  
 ///////////////////////////////////////////////////////////////////
 //Routeur des fonctions appelées en ajax via des param get en url//
@@ -153,6 +182,15 @@ if(isset($_GET["function"])){
             break;    
         case "get_global_log":
             echo $getGlobalLog($param1, $param2, $param3, $param4, $connexion);
+            break;    
+        case "get_sn":
+            echo $getSN($param1, $connexion);
+            break;    
+        case "add_sn":
+            $addSN($param1, $connexion);
+            break;    
+        case "update_sn":
+            $updateSN($param1, $connexion);
             break;    
         default:
             echo "no param";

@@ -33,7 +33,7 @@
                 width: 440px;
                 padding: 15px;
                 background: #f3f3f3;
-                min-height: 234px;
+                min-height: 262px;
                 margin: 8px;
                 .info_bloc{
                     font-size: 22px;
@@ -67,6 +67,41 @@
                     height: auto;
                 }
                 
+            }
+            .information_diag, .information_finaltest{
+                width: 285px;
+                margin-left: auto;
+                margin-right: auto;
+                margin-top: 15px;
+                margin-bottom: 25px;
+                display: block;
+                text-align: center;
+                .bouton{
+                    font-size: 25px;
+                    padding-top: 9px;
+                    height: 39px;
+                }
+            }
+            .commentary_bloc{
+                textarea{
+                    height: 153px;
+                    width: 100%;
+                }
+                .update_commentary_bt{
+                    box-shadow: 3px 3px 3px black;
+                    background: #3b73b9;
+                    margin-left: auto;
+                    margin-right: auto;
+                    width: 201px;
+                    height: 28px;
+                    text-align: center;
+                    color: white;
+                    border-radius: 5px;
+                    font-size: 18px;
+                    padding-top: 6px;
+                    margin-top: 21px;
+                    cursor: pointer;
+                }
             }
             .history_search{
                 display: block;
