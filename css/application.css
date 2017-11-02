@@ -128,8 +128,13 @@ and open the template in the editor.
 #content_home .section_container .choose_section_repair .bt_section.opacity_off {
   opacity: 0.5;
 }
-/* line 30, ../sass/_homepage.scss */
+/* line 29, ../sass/_homepage.scss */
+#content_home .section_container .bloc_container {
+  text-align: center;
+}
+/* line 31, ../sass/_homepage.scss */
 #content_home .section_container .bloc_container .bloc {
+  text-align: left;
   display: inline-block;
   vertical-align: top;
   width: 440px;
@@ -138,16 +143,16 @@ and open the template in the editor.
   min-height: 262px;
   margin: 8px;
 }
-/* line 38, ../sass/_homepage.scss */
+/* line 40, ../sass/_homepage.scss */
 #content_home .section_container .bloc_container .bloc .info_bloc {
   font-size: 22px;
   line-height: 1.8;
 }
-/* line 41, ../sass/_homepage.scss */
+/* line 43, ../sass/_homepage.scss */
 #content_home .section_container .bloc_container .bloc .info_bloc .input_zone {
   top: 0px;
 }
-/* line 43, ../sass/_homepage.scss */
+/* line 45, ../sass/_homepage.scss */
 #content_home .section_container .bloc_container .bloc .info_bloc .input_zone input {
   border: none;
   height: 27px;
@@ -159,24 +164,24 @@ and open the template in the editor.
   font-size: 22px;
   font-family: inspira;
 }
-/* line 53, ../sass/_homepage.scss */
+/* line 55, ../sass/_homepage.scss */
 #content_home .section_container .bloc_container .bloc .info_bloc .input_zone input.inp1 {
   margin-left: 50px;
 }
-/* line 56, ../sass/_homepage.scss */
+/* line 58, ../sass/_homepage.scss */
 #content_home .section_container .bloc_container .bloc .info_bloc .input_zone input.inp2 {
   margin-left: 16px;
 }
-/* line 59, ../sass/_homepage.scss */
+/* line 61, ../sass/_homepage.scss */
 #content_home .section_container .bloc_container .bloc .info_bloc .input_zone input.inp3 {
   margin-left: 3px;
 }
-/* line 65, ../sass/_homepage.scss */
+/* line 67, ../sass/_homepage.scss */
 #content_home .section_container .bloc_container .bloc .photo_tsui {
   width: 100%;
   height: auto;
 }
-/* line 71, ../sass/_homepage.scss */
+/* line 73, ../sass/_homepage.scss */
 #content_home .section_container .bloc_container .information_diag, #content_home .section_container .bloc_container .information_finaltest {
   width: 285px;
   margin-left: auto;
@@ -186,18 +191,18 @@ and open the template in the editor.
   display: block;
   text-align: center;
 }
-/* line 79, ../sass/_homepage.scss */
+/* line 81, ../sass/_homepage.scss */
 #content_home .section_container .bloc_container .information_diag .bouton, #content_home .section_container .bloc_container .information_finaltest .bouton {
   font-size: 25px;
   padding-top: 9px;
   height: 39px;
 }
-/* line 86, ../sass/_homepage.scss */
+/* line 88, ../sass/_homepage.scss */
 #content_home .section_container .bloc_container .commentary_bloc textarea {
   height: 153px;
   width: 100%;
 }
-/* line 90, ../sass/_homepage.scss */
+/* line 92, ../sass/_homepage.scss */
 #content_home .section_container .bloc_container .commentary_bloc .update_commentary_bt {
   box-shadow: 3px 3px 3px black;
   background: #3b73b9;
@@ -213,29 +218,28 @@ and open the template in the editor.
   margin-top: 21px;
   cursor: pointer;
 }
-/* line 106, ../sass/_homepage.scss */
+/* line 108, ../sass/_homepage.scss */
 #content_home .section_container .bloc_container .history_search {
   display: block;
   margin-left: auto;
   margin-right: auto;
-  margin-top: 60px;
 }
-/* line 111, ../sass/_homepage.scss */
+/* line 112, ../sass/_homepage.scss */
 #content_home .section_container .bloc_container .history_search .text_history {
   text-align: center;
   font-size: 23px;
   margin-bottom: 25px;
 }
-/* line 116, ../sass/_homepage.scss */
+/* line 117, ../sass/_homepage.scss */
 #content_home .section_container .bloc_container .history_search .history_bloc_line {
   font-size: 20px;
   margin-bottom: 20px;
 }
-/* line 119, ../sass/_homepage.scss */
+/* line 120, ../sass/_homepage.scss */
 #content_home .section_container .bloc_container .history_search .history_bloc_line.btt {
   text-align: center;
 }
-/* line 122, ../sass/_homepage.scss */
+/* line 123, ../sass/_homepage.scss */
 #content_home .section_container .bloc_container .history_search .history_bloc_line input {
   border: none;
   height: 27px;
@@ -247,19 +251,19 @@ and open the template in the editor.
   font-size: 22px;
   font-family: inspira;
 }
-/* line 133, ../sass/_homepage.scss */
+/* line 134, ../sass/_homepage.scss */
 #content_home .section_container .bloc_container .history_search .history_bloc_line .history_pn_input {
   margin-left: 22px;
 }
-/* line 136, ../sass/_homepage.scss */
+/* line 137, ../sass/_homepage.scss */
 #content_home .section_container .bloc_container .history_search .history_bloc_line .history_sn_input {
   margin-left: 10px;
 }
-/* line 139, ../sass/_homepage.scss */
+/* line 140, ../sass/_homepage.scss */
 #content_home .section_container .bloc_container .history_search .history_bloc_line .history_sso_input {
   margin-left: 53px;
 }
-/* line 142, ../sass/_homepage.scss */
+/* line 143, ../sass/_homepage.scss */
 #content_home .section_container .bloc_container .history_search .history_bloc_line .history_bt_search {
   color: white;
   border-radius: 5px;
@@ -272,11 +276,11 @@ and open the template in the editor.
   padding: 5px;
 }
 
-/* line 159, ../sass/_homepage.scss */
+/* line 160, ../sass/_homepage.scss */
 #content_homeE {
   position: relative;
 }
-/* line 163, ../sass/_homepage.scss */
+/* line 164, ../sass/_homepage.scss */
 #content_homeE .section_container .bloc_container .bloc {
   display: inline-block;
   vertical-align: top;
@@ -286,16 +290,16 @@ and open the template in the editor.
   min-height: 234px;
   margin: 8px;
 }
-/* line 171, ../sass/_homepage.scss */
+/* line 172, ../sass/_homepage.scss */
 #content_homeE .section_container .bloc_container .bloc .info_bloc {
   font-size: 22px;
   line-height: 1.8;
 }
-/* line 174, ../sass/_homepage.scss */
+/* line 175, ../sass/_homepage.scss */
 #content_homeE .section_container .bloc_container .bloc .info_bloc .input_zone {
   top: 0px;
 }
-/* line 176, ../sass/_homepage.scss */
+/* line 177, ../sass/_homepage.scss */
 #content_homeE .section_container .bloc_container .bloc .info_bloc .input_zone input {
   border: none;
   height: 27px;
@@ -307,37 +311,37 @@ and open the template in the editor.
   font-size: 22px;
   font-family: inspira;
 }
-/* line 186, ../sass/_homepage.scss */
+/* line 187, ../sass/_homepage.scss */
 #content_homeE .section_container .bloc_container .bloc .info_bloc .input_zone input.inp1 {
   margin-left: 50px;
 }
-/* line 189, ../sass/_homepage.scss */
+/* line 190, ../sass/_homepage.scss */
 #content_homeE .section_container .bloc_container .bloc .info_bloc .input_zone input.inp2 {
   margin-left: 16px;
 }
-/* line 192, ../sass/_homepage.scss */
+/* line 193, ../sass/_homepage.scss */
 #content_homeE .section_container .bloc_container .bloc .info_bloc .input_zone input.inp3 {
   margin-left: 3px;
 }
-/* line 197, ../sass/_homepage.scss */
+/* line 198, ../sass/_homepage.scss */
 #content_homeE .section_container .bloc_container .bloc .info_bloc #family_input_E {
   margin-left: 73px;
   height: 30px;
   width: 221px;
 }
-/* line 202, ../sass/_homepage.scss */
+/* line 203, ../sass/_homepage.scss */
 #content_homeE .section_container .bloc_container .bloc .info_bloc #model_input_E {
   margin-left: 79px;
   height: 30px;
   width: 221px;
 }
-/* line 207, ../sass/_homepage.scss */
+/* line 208, ../sass/_homepage.scss */
 #content_homeE .section_container .bloc_container .bloc .info_bloc #type_input_E {
   margin-left: 90px;
   height: 30px;
   width: 221px;
 }
-/* line 213, ../sass/_homepage.scss */
+/* line 214, ../sass/_homepage.scss */
 #content_homeE .section_container .bloc_container .bloc .photo_tsui {
   width: 100%;
   height: auto;
