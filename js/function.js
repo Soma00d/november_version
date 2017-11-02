@@ -403,12 +403,7 @@ $(document).ready(function(){
     
     
     
-    
-    
-    
-    
-    
-    
+        
     
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////// HOMEPAGE ENGINEERING  ////////////////////////////////////////////////////////////////
@@ -538,6 +533,36 @@ $(document).ready(function(){
                                         +"</div>"
                                     +"</div>");
                                    break;
+                                case "mushroom":
+                                   joystickContainerNew.append("<div class='new_joystick' id='id"+data[iter].id+"'><div class='name'>"+data[iter].description+"</div><div class='area_visual'><div class='area_etalon'><img class='cursor' src='images/cross_red.png'></div></div><div class='values'>x : <span class='x_val'></span> y : <span class='y_val'></span></div></div>");
+                                   joystickCalibrationContainer.append("<div class='bloc_calibrate id"+data[iter].id+" mushroom'>"
+                                        +"<div class='title_jauge'>"+data[iter].description+"</div>"            
+                                        +"<div class='calibrate_bt'>"
+                                            +"<button class='mushroom' data-mush='"+data[iter].calib_subindex_x+"' data-id='"+data[iter].id+"'>Calibrate</button>"
+                                            +"<div class='calibrate_tool hidden'>"
+                                                +"<div class='status_calib'></div>"
+                                                +"<div class='action_calib'></div>"
+                                                +"<div class='validate_calib'>Validate</div>"
+                                            +"</div>"
+                                        +"</div>"
+                                    +"</div>");
+                                    joystickVerifyContainer.append("<div class='realtime_joysticks_val id"+data[iter].id+"'>"
+                                        +"<div class='joystick_val_info'>"
+                                            +"<button class='verify_calibration id"+data[iter].id+"' data-long='"+data[iter].calib_subindex_x+"' data-lat='"+data[iter].calib_subindex_y+"' data-id='"+data[iter].id+"'>Verify</button> "
+                                            +"<button class='stop_calibration_verif id"+data[iter].id+"' data-id='"+data[iter].id+"'>Stop</button><br><br>"
+                                            +"<div class='bloc_left_joy'>"
+                                                +"<span class='text_config'>X : </span><span class='x_value_joy'>0</span><br>"
+                                                +"<span class='text_config'>Min X : </span><span class='minx_value_joy'>0</span><br>"
+                                                +"<span class='text_config'>Max X : </span><span class='maxx_value_joy'>0</span><br>"
+                                            +"</div>"
+                                            +"<div class='bloc_right_joy'>"
+                                                +"<span class='text_config'>Y : </span><span class='y_value_joy'>0</span><br>"
+                                                +"<span class='text_config'>Min Y : </span><span class='miny_value_joy'>0</span><br>"
+                                                +"<span class='text_config'>Max Y : </span><span class='maxy_value_joy'>0</span>"
+                                            +"</div>"
+                                        +"</div>"
+                                    +"</div>");
+                                   break;
                             }
                             if(data[iter].is_safety =="1"){
                                 safetyContainer.append("<div class='diag_component id"+data[iter].id+"' data-id='"+data[iter].id+"' data-name='"+data[iter].symbol_name+"' data-function='"+data[iter].type+"'><span class='td photo_piece'><img src='images/"+data[iter].photo_link+"'></span><div class='info_component'><span class='symbol'>"+data[iter].symbol_name+"</span><span class='descri'>"+data[iter].description+"</span></div></div>");
@@ -578,20 +603,26 @@ $(document).ready(function(){
                                 }
                             }
                         });
-                        calibrateContainer.find(".calibrate_bt button").on('click', function(){
-                            var subindexX = $(this).data('long');
-                            var subindexY = $(this).data('lat');
+                        calibrateContainer.find(".calibrate_bt button").on('click', function(){  
                             var id = $(this).data('id');
                             $(this).addClass("hidden");
-                            if(subindexX == ""){subindexX = "null"}
-                            if(subindexY == ""){subindexY = "null"}
-                            startCalibrate(subindexX, subindexY, id);
+                            if($(this).hasClass('mushroom')){
+                                var subindex = $(this).data('mush');
+                                startCalibrateMushroom(subindex, id);
+                            }else{
+                                var subindexX = $(this).data('long');
+                                var subindexY = $(this).data('lat');
+                                startCalibrate(subindexX, subindexY, id);
+                            }
+                            
                         });
                         
                         $(".verify_calibration").on('click', function(){
                             var subindexX = $(this).data('long');
                             var subindexY = $(this).data('lat');
                             var identifier = $(this).data('id');
+                            if(subindexX == ""){subindexX = "null"};
+                            if(subindexY == ""){subindexY = "null"};
                             startVerifyCalibration(subindexX, subindexY, identifier);
                         });
                         $(".stop_calibration_verif").on('click', function(){
@@ -611,13 +642,15 @@ $(document).ready(function(){
         _MODE = "CALIBRATION";
         pingGetInfo(model, id);
         setTimeout(function(){
+            
             var newBootRelease = bootRelease.substring(6,8)+"."+bootRelease.substring(4,6);
-            $(".fpga_config").html(newBootRelease);
             var newFPGARelease = FPGARelease.substring(6,8)+FPGARelease.substring(4,6)+"."+FPGARelease.substring(2,4)+FPGARelease.substring(0,2);
-            $(".boot_config").html(newFPGARelease);
             var newsoftwareRelease = softwareRelease.substring(6,8)+"."+softwareRelease.substring(4,6);
-            $(".sw_config").html(newsoftwareRelease);
             var newunicID = unicID.substring(14,16)+"."+unicID.substring(12,14)+"."+unicID.substring(10,12)+"."+unicID.substring(8,10)+" "+unicID.substring(6,8)+"."+unicID.substring(4,6)+"."+unicID.substring(2,4)+"."+unicID.substring(0,2);
+            
+            $(".boot_config").html(newsoftwareRelease);
+            $(".fpga_config").html(newFPGARelease);
+            $(".sw_config").html(newBootRelease);
             $(".unic_config").html(newunicID);
             
             _MODE = "PRETEST";
@@ -1744,7 +1777,35 @@ $(document).ready(function(){
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////// CALIBRATION //////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-   
+    
+    var Cal_post = "002400806d68d7551407f09b861e3aad000549a844";
+    var Cal_dlc = "080000";
+    var Cal_data_pre = "401f54";
+    var Cal_completion = "00000000";
+    var axisRawZeroLong;
+    var axisRawZeroLat;
+    var axisRawMaxLong;
+    var axisRawMinLong;
+    var axisRawMaxLat;
+    var axisRawMinLat;
+    
+    $(".eprom_protect .bt_eprom").on('click', function(){
+        if($(".eprom_protect").hasClass("protected")){
+            $(".img_eprom").attr('src', "images/unprotected.png");
+            $(this).html("LOCK EEPROM");
+            $(this).css({"background":"#3b73b9", "color": "white"});
+            $(".txt_eprom").html("EEPROM is writable");
+            sendSignal(Cal_post+Cal_dlc+cobID2+"2f00550100000000");
+            $(".eprom_protect").removeClass("protected");
+        }else{
+            $(".img_eprom").attr('src', "images/protected.png");
+            $(this).html("UNLOCK EEPROM");
+            $(this).css({"background":"#c4c4c4","color":"black"});
+            $(".txt_eprom").html("EEPROM is protected");
+            sendSignal(Cal_post+Cal_dlc+cobID2+"2f00550101000000");
+            $(".eprom_protect").addClass("protected");
+        }
+    });
    
     function startCalibrate(subindexX, subindexY, id){
         _MODE = "CALIBRATION";
@@ -1753,54 +1814,80 @@ $(document).ready(function(){
             calibrateZeroLong(subindexX, subindexY, id);
         }else{
             calibrateZeroLat(subindexX, subindexY, id);
-        }
-        
+        }        
     }
+    function startCalibrateMushroom(subindex, id){
+        _MODE = "CALIBRATION";
+        calibrateContainer.find(".id"+id+" .calibrate_tool").removeClass("hidden");
+        mushroomCalculation(subindex, id)
+    }
+    function mushroomCalculation(subindex, identifier){
+        $(".bloc_calibrate.id"+identifier).find(".status_calib").html("FixSlope & ZeroDead");
+        $(".bloc_calibrate.id"+identifier).find(".action_calib").html("<img src='images/zero_arrow.png'>");
+        $(".bloc_calibrate.id"+identifier).find(".validate_calib").on('click', function(){
+            var zeroDeadXaxisSignal = Cal_post+Cal_dlc+cobID2+"40"+subindex+"05"+Cal_completion;            
+            sendSignal(zeroDeadXaxisSignal);
+            
+            var zeroDeadYaxisSignal = Cal_post+Cal_dlc+cobID2+"40"+subindex+"06"+Cal_completion;            
+            sendSignal(zeroDeadYaxisSignal);
+            
+            var fixSlopeX = Cal_post+Cal_dlc+cobID2+"40"+subindex+"09"+Cal_completion;            
+            sendSignal(fixSlopeX);
+            
+            var fixSlopeY = Cal_post+Cal_dlc+cobID2+"40"+subindex+"10"+Cal_completion;            
+            sendSignal(fixSlopeY);
+           
+            mushroomZeroPosAcquisition(subindex, identifier);
+            
+        });
+    };
     
-    
-    var Cal_merde = "002400806d68d7551407f09b861e3aad000549a844";
-    var Cal_dlc = "080000";
-    var Cal_data   = "401f540200000000";
-    var Cal_data_pre = "401f54";
-    var Cal_completion = "00000000";
-    
-     $(".eprom_protect .bt_eprom").on('click', function(){
-        if($(".eprom_protect").hasClass("protected")){
-            $(".img_eprom").attr('src', "images/unprotected.png");
-            $(this).html("LOCK EEPROM");
-            $(this).css({"background":"#3b73b9", "color": "white"});
-            $(".txt_eprom").html("EEPROM is writable");
-            sendSignal(Cal_merde+Cal_dlc+cobID2+"2f00550100000000");
-            $(".eprom_protect").removeClass("protected");
-        }else{
-            $(".img_eprom").attr('src', "images/protected.png");
-            $(this).html("UNLOCK EEPROM");
-            $(this).css({"background":"#c4c4c4","color":"black"});
-            $(".txt_eprom").html("EEPROM is protected");
-            sendSignal(Cal_merde+Cal_dlc+cobID2+"2f00550101000000");
-            $(".eprom_protect").addClass("protected");
-        }
-    });
-    
-    var axisRawSignal = Cal_merde+Cal_dlc+cobID2+Cal_data;
-    
-    var axisRawZeroLong;
-    var axisRawZeroLat;
-    var axisRawMaxLong;
-    var axisRawMinLong;
-    var axisRawMaxLat;
-    var axisRawMinLat;
+    function  mushroomZeroPosAcquisition(subindex, identifier){
+        $(".bloc_calibrate.id"+identifier).find(".status_calib").html("Set Zero Position");
+        $(".bloc_calibrate.id"+identifier).find(".action_calib").html("<img src='images/zero_arrow.png'>");
+        $(".bloc_calibrate.id"+identifier).find(".validate_calib").on('click', function(){
+            var axisRawSignalX = Cal_post+Cal_dlc+cobID2+Cal_data_pre+"01"+Cal_completion;            
+            sendSignal(axisRawSignalX);
+            waitCalibResponse = cobID1;
+            
+            setTimeout(function(){
+                axisRawZeroLong = finalResponseData;
+                var newSignal = signalComposer(axisRawZeroLong, subindex, "03"); //param = response + header for zero long                
+                sendSignal(newSignal);
+                console.log("1er signal X envoyé");
+                setTimeout(function(){
+                    var axisRawSignalY = Cal_post+Cal_dlc+cobID2+Cal_data_pre+"02"+Cal_completion;            
+                    sendSignal(axisRawSignalY);
+
+                    waitCalibResponse = cobID1;
+
+                    setTimeout(function(){
+                        axisRawZeroLat = finalResponseData;
+                        var newSignal = signalComposer(axisRawZeroLat, subindex, "04"); //param = response + header for zero long                
+                        sendSignal(newSignal);
+                        console.log("2eme signal Y envoyé");
+                        resetCalibration(identifier);
+
+                    },200);
+                },300)
+                
+                
+            },200);
+            
+                        
+        });
+    }
     
     function signalComposer(response, header, subIndex){
         var newSignal;
         if(response.length == 2){
-            newSignal = Cal_merde+Cal_dlc+cobID2+"2f"+header+subIndex+response+"000000";
+            newSignal = Cal_post+Cal_dlc+cobID2+"2f"+header+subIndex+response+"000000";
             console.log("nouveau signal envoyé : "+newSignal);  
         }else if(response.length == 4){
-            newSignal = Cal_merde+Cal_dlc+cobID2+"2b"+header+subIndex+response+"0000";      
+            newSignal = Cal_post+Cal_dlc+cobID2+"2b"+header+subIndex+response+"0000";      
             console.log("nouveau signal envoyé : "+newSignal);  
         }else if(response.length == 8){
-            newSignal = Cal_merde+Cal_dlc+cobID2+"23"+header+subIndex+response;
+            newSignal = Cal_post+Cal_dlc+cobID2+"23"+header+subIndex+response;
             console.log("nouveau signal envoyé : "+newSignal);  
         }else{
             console.log("nouveau signal envoyé : "+newSignal);  
@@ -1813,7 +1900,7 @@ $(document).ready(function(){
         $(".bloc_calibrate.id"+identifier).find(".status_calib").html("Set ZERO position");
         $(".bloc_calibrate.id"+identifier).find(".action_calib").html("<img src='images/zero_arrow.png'>");
         $(".bloc_calibrate.id"+identifier).find(".validate_calib").on('click', function(){
-            var axisRawSignalX = Cal_merde+Cal_dlc+cobID2+Cal_data_pre+subindexX+Cal_completion;            
+            var axisRawSignalX = Cal_post+Cal_dlc+cobID2+Cal_data_pre+subindexX+Cal_completion;            
             sendSignal(axisRawSignalX);
             
             waitCalibResponse = cobID1;
@@ -1831,7 +1918,7 @@ $(document).ready(function(){
         $(".bloc_calibrate.id"+identifier).find(".status_calib").html("Set RIGHT position max");
         $(".bloc_calibrate.id"+identifier).find(".action_calib").html("<img src='images/right_arrow.png'>");
         $(".bloc_calibrate.id"+identifier).find(".validate_calib").on('click', function(){
-            var axisRawSignalX = Cal_merde+Cal_dlc+cobID2+Cal_data_pre+subindexX+Cal_completion; 
+            var axisRawSignalX = Cal_post+Cal_dlc+cobID2+Cal_data_pre+subindexX+Cal_completion; 
             
             sendSignal(axisRawSignalX);
             waitCalibResponse = cobID1;
@@ -1848,7 +1935,7 @@ $(document).ready(function(){
         $(".bloc_calibrate.id"+identifier).find(".status_calib").html("Set LEFT position max");
         $(".bloc_calibrate.id"+identifier).find(".action_calib").html("<img src='images/left_arrow.png'>");
         $(".bloc_calibrate.id"+identifier).find(".validate_calib").on('click', function(){
-            var axisRawSignalX = Cal_merde+Cal_dlc+cobID2+Cal_data_pre+subindexX+Cal_completion;             
+            var axisRawSignalX = Cal_post+Cal_dlc+cobID2+Cal_data_pre+subindexX+Cal_completion;             
             sendSignal(axisRawSignalX);
             
             waitCalibResponse = cobID1;
@@ -1872,7 +1959,7 @@ $(document).ready(function(){
         $(".bloc_calibrate.id"+identifier).find(".status_calib").html("Set BOTTOM position max");
         $(".bloc_calibrate.id"+identifier).find(".action_calib").html("<img src='images/down_arrow.png'>");
         $(".bloc_calibrate.id"+identifier).find(".validate_calib").on('click', function(){
-            var axisRawSignalY = Cal_merde+Cal_dlc+cobID2+Cal_data_pre+subindexY+Cal_completion;             
+            var axisRawSignalY = Cal_post+Cal_dlc+cobID2+Cal_data_pre+subindexY+Cal_completion;             
             sendSignal(axisRawSignalY);
             
             waitCalibResponse = cobID1;
@@ -1889,7 +1976,7 @@ $(document).ready(function(){
         $(".bloc_calibrate.id"+identifier).find(".status_calib").html("Set TOP position max");
         $(".bloc_calibrate.id"+identifier).find(".action_calib").html("<img src='images/top_arrow.png'>");
         $(".bloc_calibrate.id"+identifier).find(".validate_calib").on('click', function(){
-            var axisRawSignalY = Cal_merde+Cal_dlc+cobID2+Cal_data_pre+subindexY+Cal_completion;             
+            var axisRawSignalY = Cal_post+Cal_dlc+cobID2+Cal_data_pre+subindexY+Cal_completion;             
             sendSignal(axisRawSignalY);
             
             waitCalibResponse = cobID1;
@@ -1906,7 +1993,7 @@ $(document).ready(function(){
         $(".bloc_calibrate.id"+identifier).find(".status_calib").html("Set ZERO position");
         $(".bloc_calibrate.id"+identifier).find(".action_calib").html("<img src='images/zero_arrow.png'>");
         $(".bloc_calibrate.id"+identifier).find(".validate_calib").on('click', function(){
-           var axisRawSignalY = Cal_merde+Cal_dlc+cobID2+Cal_data_pre+subindexY+Cal_completion;             
+           var axisRawSignalY = Cal_post+Cal_dlc+cobID2+Cal_data_pre+subindexY+Cal_completion;             
             sendSignal(axisRawSignalY);
             
             waitCalibResponse = cobID1;
@@ -1935,7 +2022,18 @@ $(document).ready(function(){
     ////////////////////////////////////////////////////////////////////////////
     //////////////////////VERIFY CALIBRATION////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////
-    
+    $(".reset_calibration_verif").on('click', function(){
+        _MODE = "CALIBRATION";
+        if($(this).hasClass("joystick1")){
+            resetCalibrationVerif("joystick1");
+        }
+        if($(this).hasClass("joystick2")){
+            resetCalibrationVerif("joystick2");
+        }
+        if($(this).hasClass("joystick3")){
+            resetCalibrationVerif("joystick3");
+        }
+    }); 
     function startVerifyCalibration(subindexX, subindexY, identifier){
         currentIdentifier = identifier;
         alert("start with "+currentIdentifier);
@@ -1952,7 +2050,6 @@ $(document).ready(function(){
         clearInterval(intervalVerify);
         _MODE = "CALIBRATION";
     }
-    
     function updateVerifyData(verifyVal, axis, currentIdentifier){
         var xValMin = joystickVerifyContainer.find(".id"+currentIdentifier+" .minx_value_joy").html();    
         var xValMax = joystickVerifyContainer.find(".id"+currentIdentifier+" .maxx_value_joy").html();    
@@ -1991,22 +2088,7 @@ $(document).ready(function(){
                 joystickVerifyContainer.find(".id"+currentIdentifier+" .maxy_value_joy").html(valueFinal);
             }
         }
-    }
-    
-    $(".reset_calibration_verif").on('click', function(){
-        _MODE = "CALIBRATION";
-        if($(this).hasClass("joystick1")){
-            resetCalibrationVerif("joystick1");
-        }
-        if($(this).hasClass("joystick2")){
-            resetCalibrationVerif("joystick2");
-        }
-        if($(this).hasClass("joystick3")){
-            resetCalibrationVerif("joystick3");
-        }
-        
-    });    
-    
+    }    
     function resetCalibrationVerif(joystick){
         console.log("index verif global" +indexVerifGlobal);
         switch(joystick){
@@ -2020,15 +2102,18 @@ $(document).ready(function(){
                 break;            
         }
     }
-        
     function pingGetAxisValue(subindexX, subindexY, identifier){
-            var axisRawVerifSignalX = Cal_merde+Cal_dlc+cobID2+"400165"+subindexX+"00000000";    
-            var axisRawVerifSignalY = Cal_merde+Cal_dlc+cobID2+"400165"+subindexY+"00000000";    
-            
+        if(subindexX !== "null"){
+            var axisRawVerifSignalX = Cal_post+Cal_dlc+cobID2+"400165"+subindexX+"00000000";
             sendSignal(axisRawVerifSignalX);  
+        }
+        if(subindexY !== "null"){
+            var axisRawVerifSignalY = Cal_post+Cal_dlc+cobID2+"400165"+subindexY+"00000000"; 
             sendSignal(axisRawVerifSignalY);  
-
+        }
     }
+    
+    
     
     
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2036,37 +2121,25 @@ $(document).ready(function(){
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     
     $(".bt_get_config").on('click', function(){
-        _MODE = "CALIBRATION";
-        pingGetInfo(globalName, cobID2);
-        setTimeout(function(){
-            var newBootRelease = bootRelease.substring(6,8)+"."+bootRelease.substring(4,6);
-            $(".boot_config").html(newBootRelease);
-            var newFPGARelease = FPGARelease.substring(6,8)+FPGARelease.substring(4,6)+"."+FPGARelease.substring(2,4)+FPGARelease.substring(0,2);
-            $(".fpga_config").html(newFPGARelease);
-            var newsoftwareRelease = softwareRelease.substring(6,8)+"."+softwareRelease.substring(4,6);
-            $(".sw_config").html(newsoftwareRelease);
-            var newunicID = unicID.substring(14,16)+"."+unicID.substring(12,14)+"."+unicID.substring(10,12)+"."+unicID.substring(8,10)+" "+unicID.substring(6,8)+"."+unicID.substring(4,6)+"."+unicID.substring(2,4)+"."+unicID.substring(0,2);
-            $(".unic_config").html(newunicID);
-        },1200);
-        
+        getInfoCard(globalName, cobID2);
     });
     
     function pingGetInfo(model, id){
         switch(model){
             case "ELEGANCE":
-                pingTSSC(Cal_merde+Cal_dlc+id+"4018100300000000",id);                
+                pingTSSC(Cal_post+Cal_dlc+id+"4018100300000000",id);                
                 setTimeout(function(){
                     bootRelease = finalResponseData;                    
-                    pingTSSC(Cal_merde+Cal_dlc+id+"4018100400000000",id);
+                    pingTSSC(Cal_post+Cal_dlc+id+"4018100400000000",id);
                     setTimeout(function(){
                         FPGARelease = finalResponseData;
-                        pingTSSC(Cal_merde+Cal_dlc+id+"4018100700000000",id);
+                        pingTSSC(Cal_post+Cal_dlc+id+"4018100700000000",id);
                         setTimeout(function(){
                             softwareRelease = finalResponseData;
-                            pingTSSC(Cal_merde+Cal_dlc+id+"4018100500000000",id);
+                            pingTSSC(Cal_post+Cal_dlc+id+"4018100500000000",id);
                             setTimeout(function(){
                                 var unicIDmsb = finalResponseData;
-                                pingTSSC(Cal_merde+Cal_dlc+id+"4018100600000000",id);
+                                pingTSSC(Cal_post+Cal_dlc+id+"4018100600000000",id);
                                 setTimeout(function(){
                                     var unicIDlsb = finalResponseData;
                                     unicID = unicIDmsb+unicIDlsb;
@@ -2077,19 +2150,19 @@ $(document).ready(function(){
                 },200);     
             break;            
             case "OMEGA":
-//                pingTSSC(Cal_merde+Cal_dlc+Cal_canid+"4018100300000000",id);                
+//                pingTSSC(Cal_post+Cal_dlc+Cal_canid+"4018100300000000",id);                
 //                setTimeout(function(){
 //                    bootRelease = finalResponseData;                    
-//                    pingTSSC(Cal_merde+Cal_dlc+Cal_canid+"4018100400000000",id);
+//                    pingTSSC(Cal_post+Cal_dlc+Cal_canid+"4018100400000000",id);
 //                    setTimeout(function(){
 //                        FPGARelease = finalResponseData;
-//                        pingTSSC(Cal_merde+Cal_dlc+Cal_canid+"4018100700000000",id);
+//                        pingTSSC(Cal_post+Cal_dlc+Cal_canid+"4018100700000000",id);
 //                        setTimeout(function(){
 //                            softwareRelease = finalResponseData;
-//                            pingTSSC(Cal_merde+Cal_dlc+Cal_canid+"4018100500000000",id);
+//                            pingTSSC(Cal_post+Cal_dlc+Cal_canid+"4018100500000000",id);
 //                            setTimeout(function(){
 //                                var unicIDmsb = finalResponseData;
-//                                pingTSSC(Cal_merde+Cal_dlc+Cal_canid+"4018100600000000",id);
+//                                pingTSSC(Cal_post+Cal_dlc+Cal_canid+"4018100600000000",id);
 //                                setTimeout(function(){
 //                                    var unicIDlsb = finalResponseData;
 //                                    unicID = unicIDmsb+unicIDlsb;
@@ -2151,7 +2224,7 @@ $(document).ready(function(){
     
     $(".testing_upl .start_download").on('click', function(){
         startDownload(cobID2);
-        //sendSignal(Cal_merde+Cal_dlc+Cal_canid+"2f511f0100000000");
+        //sendSignal(Cal_post+Cal_dlc+Cal_canid+"2f511f0100000000");
     });
     
     $(".testing_upl .stop_download").on('click', function(){
@@ -2165,7 +2238,7 @@ $(document).ready(function(){
         $(".downloading_bar_container").removeClass("hidden");
         //stop application mode
         console.log("stop application mode");
-        sendSignal(Cal_merde+Cal_dlc+canId+"2f511f0100000000");
+        sendSignal(Cal_post+Cal_dlc+canId+"2f511f0100000000");
         setTimeout(function(){
             console.log("start download mode");
             if(arrayOfLines[0].substring(0,1)== "+"){
@@ -2173,7 +2246,7 @@ $(document).ready(function(){
                 console.log(lengthFirstLine);
                 var newval= lengthFirstLine.toString(16);
                 console.log(newval);
-                var customCAN = Cal_merde+Cal_dlc+canId+"21501f01"+newval+"000000";
+                var customCAN = Cal_post+Cal_dlc+canId+"21501f01"+newval+"000000";
                 sendSignal(customCAN);
                 setTimeout(function(){
                     var asciiToHex = "";
@@ -2197,7 +2270,7 @@ $(document).ready(function(){
                 console.log(lengthFirstLine);
                 var newval= lengthFirstLine.toString(16);
                 console.log(newval);
-                var customCAN = Cal_merde+Cal_dlc+canId+"21501f01"+newval+"000000";
+                var customCAN = Cal_post+Cal_dlc+canId+"21501f01"+newval+"000000";
                 sendSignal(customCAN);
                 setTimeout(function(){
                     var asciiToHex = "";
@@ -2212,7 +2285,7 @@ $(document).ready(function(){
                 var lengthFirstLine = arrayOfLines[startIndex].length-1;
                 var newval = lengthFirstLine.toString(16);
                 if(lengthFirstLine <= 15){newval = "0"+newval}
-                var customCAN = Cal_merde+Cal_dlc+canId+"21501f01"+newval+"000000";
+                var customCAN = Cal_post+Cal_dlc+canId+"21501f01"+newval+"000000";
                 sendSignal(customCAN);
                 setTimeout(function(){
                     var asciiToHex = "";
@@ -2238,7 +2311,7 @@ $(document).ready(function(){
         waitDownloadResponse = "";
         isDownloading = 0;
         $(".downloading_bar_container").addClass("hidden");
-        sendSignal(Cal_merde+Cal_dlc+canId+"2f511f0101000000");
+        sendSignal(Cal_post+Cal_dlc+canId+"2f511f0101000000");
         //sendSignal("002400806d68d7551407f09b861e3aad000549a8440800000000072d2f511f0101000000");
     };
     
@@ -2287,7 +2360,7 @@ $(document).ready(function(){
             var data = signal.substring(startInd, endInd);
             data = addZeroAfter(data,14);
             //console.log('t+n+c :'+t+" "+n+" "+c)
-            sendSignal(Cal_merde+Cal_dlc+canId+hexDataZero+data);
+            sendSignal(Cal_post+Cal_dlc+canId+hexDataZero+data);
             
             waitDownloadResponse = cobID1;
             var checkResponse = setInterval(function(){
@@ -2351,7 +2424,7 @@ $(document).ready(function(){
             var data = signal.substring(startInd, endInd);
             data = addZeroAfter(data,14);
             //console.log('t+n+c :'+t+" "+n+" "+c)
-            sendSignal(Cal_merde+Cal_dlc+canId+hexDataZero+data);
+            sendSignal(Cal_post+Cal_dlc+canId+hexDataZero+data);
             if(index == (nbMessage-1) && index !=0){
                 coreDownload(canId, startIndex+1)
             }else{
@@ -2674,6 +2747,63 @@ $(document).ready(function(){
     
     
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////// EMERGENCY STOP PROCESS ///////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    
+    function startEmergencyStopProcess(){
+        $(".emergency_stop_bt").off();        
+//        intervalSpe = setInterval(function(){
+//            sendSignal("002400806d68d7551407f09b861e3aad000549a844010000000007180500000000000000");
+//        },100);        
+        $(".emergency_stop_bt").html("Send CLR Command");
+        
+        $(".emergency_stop_bt").on('click', function(){            
+            sendSignal("002400806d68d7551407f09b861e3aad000549a844080000"+cobID2+"2F00300143000000");
+            sendSignal("002400806d68d7551407f09b861e3aad000549a844080000"+cobID2+"2F0030014C000000");
+            sendSignal("002400806d68d7551407f09b861e3aad000549a844080000"+cobID2+"2F00300152000000");
+            $(".emergency_stop_bt").off();
+            $(".emergency_stop_bt").html("Send SET Command");            
+            
+            $(".emergency_stop_bt").on('click', function(){
+                $(".emergency_stop_bt").off();
+                $(".emergency_stop_bt").html("Send CLR Command");
+                sendSignal("002400806d68d7551407f09b861e3aad000549a844080000"+cobID2+"2F00300153000000");
+                sendSignal("002400806d68d7551407f09b861e3aad000549a844080000"+cobID2+"2F00300145000000");
+                sendSignal("002400806d68d7551407f09b861e3aad000549a844080000"+cobID2+"2F00300154000000");                
+                
+                $(".emergency_stop_bt").on('click', function(){
+                    $(".emergency_stop_bt").off();
+                    $(".emergency_stop_bt").html("Send DWN Command");
+                    sendSignal("002400806d68d7551407f09b861e3aad000549a844080000"+cobID2+"2F00300143000000");
+                    sendSignal("002400806d68d7551407f09b861e3aad000549a844080000"+cobID2+"2F0030014C000000");
+                    sendSignal("002400806d68d7551407f09b861e3aad000549a844080000"+cobID2+"2F00300152000000");
+                    
+                    
+                    $(".emergency_stop_bt").on('click', function(){
+                        $(".emergency_stop_bt").off();
+                        $(".emergency_stop_bt").html("Send CLR Command");
+                        sendSignal("002400806d68d7551407f09b861e3aad000549a844080000"+cobID2+"2F00300144000000");
+                        sendSignal("002400806d68d7551407f09b861e3aad000549a844080000"+cobID2+"2F00300157000000");
+                        sendSignal("002400806d68d7551407f09b861e3aad000549a844080000"+cobID2+"2F0030014E000000");
+                        $(".emergency_stop_bt").on('click', function(){
+                            $(".emergency_stop_bt").html("Emergency Stop TEST");
+                            $(".emergency_stop_bt").off();
+                            sendSignal("002400806d68d7551407f09b861e3aad000549a844080000"+cobID2+"2F00300143000000");
+                            sendSignal("002400806d68d7551407f09b861e3aad000549a844080000"+cobID2+"2F0030014C000000");
+                            sendSignal("002400806d68d7551407f09b861e3aad000549a844080000"+cobID2+"2F00300152000000");
+                            //clearInterval(intervalSpe);
+                            $(".emergency_stop_bt").on('click', function(){
+                                startEmergencyStopProcess();                                
+                            });
+                        });
+                    });
+                });
+            });
+        });
+    };
+    
+    
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////// ON CLICK FUNCTION ////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     
@@ -2691,6 +2821,22 @@ $(document).ready(function(){
     $(".stop_node_bt").on('click', function(){
         sendSignal(stopNodeMsg);
     });
+    $(".display_all_bt").on('click', function(){
+        sendSignal("002400806d68d7551407f09b861e3aad000549a84408000000000328AAAAAAAAAAAAAA88");
+        sendSignal("002400806d68d7551407f09b861e3aad000549a84408000000000428AAAAAAA8AAAAAAAA");
+        sendSignal("002400806d68d7551407f09b861e3aad000549a84404000000000228AAAA000000000000");
+    });
+    $(".stop_all_bt").on('click', function(){
+        sendSignal("002400806d68d7551407f09b861e3aad000549a844080000000002280000000000000000");
+        sendSignal("002400806d68d7551407f09b861e3aad000549a844080000000003280000000000000000");
+        sendSignal("002400806d68d7551407f09b861e3aad000549a844080000000004280000000000000000");
+    });
+    $(".start_agila_bt").on('click', function(){
+        sendSignal("002400806d68d7551407f09b861e3aad000549a844080000"+cobID2+"2F01300101000000");
+    });
+    $(".start_elegance_bt").on('click', function(){
+        sendSignal("002400806d68d7551407f09b861e3aad000549a844080000"+cobID2+"2F01300102000000");
+    });
     
     $("#send_pic").on('click', function(){
         var signal = $("#msg_pic").val();
@@ -2705,6 +2851,10 @@ $(document).ready(function(){
         _MODE = "PRETEST";
         sendSignal("002400806d68d7551407f09b861e3aad000549a84402000000000000012D000000000000");
     });
+    $(".emergency_stop_bt").on('click', function(){
+        startEmergencyStopProcess();
+    });
+    
     
     //switch de panel sur la toolbox ingé
     $("#content_toolbox .show_joystick").on('click', function(){
@@ -2816,7 +2966,10 @@ $(document).ready(function(){
    $(".bouton.newjoy").on('click', function(){
        _MODE = "PRETEST";
        alert("mode pretest");
-       
+   });
+   
+   $(".tsui_restart_bt").on('click', function(){
+       sendSignalPic("5");
    });
  
     

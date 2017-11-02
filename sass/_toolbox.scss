@@ -239,11 +239,9 @@
         top: -101px;
         margin: auto;
         left: -77px;
-        /* right: 0; */
         width: 181px;
-        z-index: 99;
+        z-index: 0;
         background: white;
-        /* border: 3px solid #3b73b9; */
         border-radius: 5px;
         font-size: 14px;
         background: #f2f2f2;
@@ -425,6 +423,23 @@
             color: #3e3e3e;
         }
     }
+    .tsui_restart_bt{
+        text-align: center;
+        background: #c84848;
+        padding: 5px;
+        color: white;
+        width: 183px;
+        border-radius: 5px;
+        display: inline-block;
+        vertical-align: top;
+        position: absolute;
+        left: 0;
+        right: 0;
+        margin: auto;
+        cursor: pointer;
+        box-shadow: 2px 2px 2px black;
+        top:248px;
+    }
     .start_node_bt{
         text-align: center;
         background: #3b73b9;
@@ -459,7 +474,92 @@
         box-shadow: 2px 2px 2px black;
         top:190px;
     }
-    .supply_container{
+    .display_all_bt{
+        text-align: center;
+        background: #3b73b9;
+        padding: 5px;
+        color: white;
+        width: 183px;
+        border-radius: 5px;
+        display: inline-block;
+        vertical-align: top;
+        position: absolute;
+        left: 0;
+        right: 0;
+        margin: auto;
+        cursor: pointer;
+        box-shadow: 2px 2px 2px black;
+        top:250px;
+    }
+    .stop_all_bt{
+        text-align: center;
+        background: #3b73b9;
+        padding: 5px;
+        color: white;
+        width: 183px;
+        border-radius: 5px;
+        display: inline-block;
+        vertical-align: top;
+        position: absolute;
+        left: 0;
+        right: 0;
+        margin: auto;
+        cursor: pointer;
+        box-shadow: 2px 2px 2px black;
+        top:290px;
+    }
+    .start_agila_bt{
+        text-align: center;
+        background: #3b73b9;
+        padding: 5px;
+        color: white;
+        width: 183px;
+        border-radius: 5px;
+        display: inline-block;
+        vertical-align: top;
+        position: absolute;
+        left: 0;
+        right: 0;
+        margin: auto;
+        cursor: pointer;
+        box-shadow: 2px 2px 2px black;
+        top:350px;
+    }
+    .start_elegance_bt{
+        text-align: center;
+        background: #3b73b9;
+        padding: 5px;
+        color: white;
+        width: 183px;
+        border-radius: 5px;
+        display: inline-block;
+        vertical-align: top;
+        position: absolute;
+        left: 0;
+        right: 0;
+        margin: auto;
+        cursor: pointer;
+        box-shadow: 2px 2px 2px black;
+        top:390px;
+    }
+    .emergency_stop_bt{
+        text-align: center;
+        background: #3b73b9;
+        padding: 5px;
+        color: white;
+        width: 183px;
+        border-radius: 5px;
+        display: inline-block;
+        vertical-align: top;
+        position: absolute;
+        left: 0;
+        right: 0;
+        margin: auto;
+        cursor: pointer;
+        box-shadow: 2px 2px 2px black;
+        top:450px;
+    }
+    .supply_container{  
         top: 110px;
         left: 0;
         right: 0;
@@ -923,6 +1023,43 @@
 .calibration_inge{
     display:none;
     margin-top: 40px;
+    .calibration_zone_container{
+        text-align:center;
+        margin-top: 30px;
+    }
+    .bloc_calibrate{
+        display: inline-block;
+        border: 1px solid black;
+        text-align: center;
+        padding: 10px;
+        margin: 10px;
+        width: 280px;
+        vertical-align: top;
+    }
+    .validate_calib{
+        cursor: pointer;
+        background: #3b73b9;
+        width: 80px;
+        display: inline-block;
+        padding: 3px;
+        color: white;
+        margin-top: 10px;
+        border-radius: 5px;
+    }
+    .title_jauge{
+        font-weight: bold;
+        font-size: 18px;
+        margin-bottom: 10px;
+        color: #3b73b9;
+    }
+    .status_calib{
+        margin-bottom: 10px;
+    }
+    .calibration_test_container{
+        text-align:center;
+        margin-top: 20px;
+        margin-bottom: 30px;
+    }
     .bt_moins{
         border: 1px solid black;
         cursor: pointer;
@@ -1010,17 +1147,17 @@
         }
     }
     .realtime_joysticks_val{
-        text-align: center;
-        background: #f2f2f2;
-        padding: 10px;
-        width: 250px;
-        border-radius: 5px;
-        border: 2px solid black;
-        display: inline-block;
-        vertical-align: top;
-        margin-left: -19px;
-        height: 128px;
-        margin-top: 200px;
+            text-align: center;
+            background: #f2f2f2;
+            padding: 10px;
+            width: 280px;
+            border-radius: 5px;
+            border: 2px solid black;
+            display: inline-block;
+            vertical-align: top;
+            margin-left: -19px;
+            height: 128px;
+            margin: 10px;
         .current_joystick{
             font-weight:bold;
         }
