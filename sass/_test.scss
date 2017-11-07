@@ -60,6 +60,19 @@
         vertical-align:top;
         text-align:center;
     }
+    .symbol_name{
+        font-weight:bold;
+    }
+    .led_container{
+        margin-top: 30px;
+        border-top: 5px solid #3b73b9;
+        .td{
+            width:20%;
+            display:inline-block;
+            vertical-align:top;
+            text-align:center;
+        }
+    }
     .line{
         border-bottom:1px solid grey;
         height: 40px;

@@ -4,7 +4,10 @@ $(document).ready(function(){
     var dictionary = {};  
     var jsonLog = [];
     //------//
-    var lineContainer = $("#content_pretest .line_container");
+    var lineContainer = $("#content_pretest .result_array");
+    var buttonContainer = $("#content_pretest .button_container");
+    var ledContainer = $("#content_pretest .led_container");
+    
     var testPoppin = $("#content_pretest .test_poppin");
     
     
@@ -211,12 +214,23 @@ $(document).ready(function(){
                         success: function(data, statut){
                             dictionary = data;                
                             var len = data.length;
-                            lineContainer.empty();
+                            buttonContainer.empty();
+                            ledContainer.empty();
                             for (var iter = 0; iter < len; iter++) {
-                                if(data[iter].type !== "led" && data[iter].type !== "buzzer"){
-                                    lineContainer.append("<div class='line id"+data[iter].id+"' data-id='"+data[iter].id+"' data-name='"+data[iter].symbol_name+"' data-function='"+data[iter].type+"'><span class='td'>"+data[iter].symbol_name+"</span><span class='td'>"+data[iter].type+"</span><span class='td'>"+data[iter].description+"</span><span class='td press'>"+data[iter].pressed_val+"</span><span class='td rel'>"+data[iter].released_val+"</span><span class='td photo_piece'><img src='images/"+data[iter].photo_link+"'></span><span class='td totest'>Not tested</span></div>");
+                                if(data[iter].type == "button"){
+                                    if(data[iter].is_led == "1"){
+                                        ledContainer.append("<div class='line id"+data[iter].id+"' data-id='"+data[iter].id+"' data-name='"+data[iter].symbol_name+"' data-function='led'><span class='td symbol_name'>"+data[iter].symbol_name+"</span><span class='td'>led</span><span class='td'>"+data[iter].description+"</span><span class='td photo_piece'><img src='images/"+data[iter].photo_link+"'></span><span class='td test_bt' data-name='"+data[iter].description+"' data-on='"+data[iter].on_signal+"' data-off='"+data[iter].off_signal+"' data-canid='"+data[iter].can_id+"'>TEST</span></div>");
+                                    }else if(data[iter].is_led == "2"){
+                                        ledContainer.append("<div class='line id"+data[iter].id+"' data-id='"+data[iter].id+"' data-name='"+data[iter].symbol_name+"' data-function='led'><span class='td symbol_name'>"+data[iter].symbol_name+"</span><span class='td'>led</span><span class='td'>"+data[iter].description+"</span><span class='td photo_piece'><img src='images/"+data[iter].photo_link+"'></span><span class='td test_bt' data-name='"+data[iter].description+"' data-on='"+data[iter].on_signal+"' data-off='"+data[iter].off_signal+"' data-canid='"+data[iter].can_id+"'>TEST</span></div>");
+                                    }
+                                    
+                                    buttonContainer.append("<div class='line id"+data[iter].id+"' data-id='"+data[iter].id+"' data-name='"+data[iter].symbol_name+"' data-function='"+data[iter].type+"'><span class='td symbol_name'>"+data[iter].symbol_name+"</span><span class='td'>"+data[iter].type+"</span><span class='td'>"+data[iter].description+"</span><span class='td press'>"+data[iter].pressed_val+"</span><span class='td rel'>"+data[iter].released_val+"</span><span class='td photo_piece'><img src='images/"+data[iter].photo_link+"'></span><span class='td totest'>Not tested</span></div>");
+
+                                
                                 }else{
-                                    lineContainer.append("<div class='line id"+data[iter].id+"' data-id='"+data[iter].id+"' data-name='"+data[iter].symbol_name+"' data-function='"+data[iter].type+"'><span class='td'>"+data[iter].symbol_name+"</span><span class='td'>"+data[iter].type+"</span><span class='td'>"+data[iter].description+"</span><span class='td press'>"+data[iter].pressed_val+"</span><span class='td rel'>"+data[iter].released_val+"</span><span class='td photo_piece'><img src='images/"+data[iter].photo_link+"'></span><span class='td test_bt' data-name='"+data[iter].description+"' data-press='"+data[iter].pressed_val+"' data-release='"+data[iter].released_val+"' data-canid='"+data[iter].can_id+"'>TEST</span></div>");
+                                    if(data[iter].type !== "joystick"){
+                                        ledContainer.append("<div class='line id"+data[iter].id+"' data-id='"+data[iter].id+"' data-name='"+data[iter].symbol_name+"' data-function='"+data[iter].type+"'><span class='td symbol_name'>"+data[iter].symbol_name+"</span><span class='td'>"+data[iter].type+"</span><span class='td'>"+data[iter].description+"</span><span class='td photo_piece'><img src='images/"+data[iter].photo_link+"'></span><span class='td test_bt' data-name='"+data[iter].description+"' data-on='"+data[iter].on_signal+"' data-off='"+data[iter].off_signal+"' data-canid='"+data[iter].can_id+"'>TEST</span></div>");
+                                    }
                                 }
                                 if(data[iter].type == "joystick"){                                    
                                    joystickContainerNewRepair.append("<div class='new_joystick' id='id"+data[iter].id+"'><div class='name'>"+data[iter].description+"</div><div class='area_visual'><div class='area_etalon'><img class='cursor' src='images/cross_red.png'></div></div><div class='values'>x : <span class='x_val'></span> y : <span class='y_val'></span></div></div>");
@@ -226,17 +240,21 @@ $(document).ready(function(){
                             $(".test_bt").on('click',function(){    
                                 var _this = $(this);
                                 var description = $(this).data('name');
-                                var press = $(this).data('press');
-                                var release = $(this).data('release');
-                                var canId = $(this).data('canid');        
-                                var dlc = "0"+(press.toString().length/2)+"0000";
-                                var signalStart = "002400806d68d7551407f09b861e3aad000549a844"+dlc+canId+press;
-                                var signalStop = "002400806d68d7551407f09b861e3aad000549a844"+dlc+canId+release;
-
+                                var onSignal = $(this).data('on');
+                                var offSignal = $(this).data('off');
+                                var postSignal = "002400806d68d7551407f09b861e3aad000549a844080000"; 
+                                var signalStart = postSignal+onSignal;
+                                var signalStop = postSignal+offSignal;
+                                
+                                var topPos = $(window).scrollTop();
+                                testPoppin.css('top',topPos+300+"px");
+                                $(".result_array").css("opacity", "0.5");
+                                
                                 testPoppin.html("<div class='title'>"+description+"</div><div class='bt_test'><div class='bouton_grey start_bt'>Start</div><div class='bouton_grey stop_bt'>Stop</div></div><div class='result_test'>Did something happen as expected ?</div><div class='bt_test_result'><div class='bouton_grey yes_bt'>YES</div><div class='bouton_grey no_bt'>NO</div></div>");
 
                                 testPoppin.find(".title").html(description);        
                                 testPoppin.removeClass("hidden");
+                                
 
                                 testPoppin.find(".start_bt").on('click', function(){                       
                                     sendSignal(signalStart);                                
@@ -245,6 +263,7 @@ $(document).ready(function(){
                                     sendSignal(signalStop);
                                 });
                                 testPoppin.find(".yes_bt").on('click', function(){  
+                                    $(".result_array").css("opacity", "1");
                                     testPoppin.empty();
                                     testPoppin.addClass("hidden");
                                     _this.css('background-color','yellowgreen');
@@ -253,12 +272,15 @@ $(document).ready(function(){
                                     _this.parent().addClass("testok");
                                 });
                                 testPoppin.find(".no_bt").on('click', function(){   
+                                    $(".result_array").css("opacity", "1");
                                     testPoppin.empty();
                                     testPoppin.addClass("hidden");
                                     _this.css('background-color','red');
                                     _this.html('TEST FAIL');
                                     _this.parent().addClass("tested");
                                 });
+                                
+                               
                             });
 
                             $(".totest").on('click',function(){
@@ -695,16 +717,16 @@ $(document).ready(function(){
                             switch(dictionary[nb].type){
                                 case "button":                        
                                     if(dictionary[nb].pressed_val === canData){
-                                        lineContainer.find(".line.id"+dictionary[nb].id).addClass("pressed");
-                                        lineContainer.find(".line.id"+dictionary[nb].id).addClass("tested");                                       
-                                        lineContainer.find(".line.id"+dictionary[nb].id+" .totest").addClass("tested");
-                                        lineContainer.find(".line.id"+dictionary[nb].id+" .totest").html("Tested");
+                                        buttonContainer.find(".line.id"+dictionary[nb].id).addClass("pressed");
+                                        buttonContainer.find(".line.id"+dictionary[nb].id).addClass("tested");                                       
+                                        buttonContainer.find(".line.id"+dictionary[nb].id+" .totest").addClass("tested");
+                                        buttonContainer.find(".line.id"+dictionary[nb].id+" .totest").html("Tested");
                                     }
                                     if(dictionary[nb].released_val === canData){
-                                        lineContainer.find(".line.id"+dictionary[nb].id).addClass("released"); 
-                                        lineContainer.find(".line.id"+dictionary[nb].id).addClass("tested");
-                                        lineContainer.find(".line.id"+dictionary[nb].id+" .totest").addClass("tested");
-                                        lineContainer.find(".line.id"+dictionary[nb].id+" .totest").html("Tested");
+                                        buttonContainer.find(".line.id"+dictionary[nb].id).addClass("released"); 
+                                        buttonContainer.find(".line.id"+dictionary[nb].id).addClass("tested");
+                                        buttonContainer.find(".line.id"+dictionary[nb].id+" .totest").addClass("tested");
+                                        buttonContainer.find(".line.id"+dictionary[nb].id+" .totest").html("Tested");
                                     }
                                     break;                                
                                 case "joystick":           
@@ -1266,7 +1288,7 @@ $(document).ready(function(){
             dataType : 'JSON',
             data: {commentary:commentaryStr},
             success: function(data, statut){
-                alert("Your commentary on SN "+serialNumber+ " has been updated.");
+                alert("Your comment on SN "+serialNumber+ " has been updated.");
             }
         });
     }
@@ -1435,7 +1457,7 @@ $(document).ready(function(){
         var name;
         var fct;
         var completeName;
-        $("#content_pretest .line_container .line").each(function(){
+        $("#content_pretest .line").each(function(){
             if($(this).hasClass("tested")){
                 name = $(this).data('name');
                 fct = $(this).data('function');
@@ -2936,7 +2958,7 @@ $(document).ready(function(){
     
     $("#send_pic").on('click', function(){
         var signal = $("#msg_pic").val();
-        alert(convertHexaPic(signal, 12));
+        sendSignalPic(signal);
     });
     
     $(".toolbox").on('click', function(){
